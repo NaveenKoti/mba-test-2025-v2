@@ -1,0 +1,405 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MBA Program - Karnataka University Dharwad</title>
+    <link rel="stylesheet" href="style.css">
+    <meta name="description"
+        content="Premier MBA Program at Karnataka University Dharwad - Transform your career with our specialized MBA programs in Marketing, Finance, HR, Operations, Analytics and General Management.">
+</head>
+
+<body>
+    <!-- Sticky Header -->
+    <header class="header" id="header">
+        <nav class="nav container">
+            <div class="nav__brand">
+                <img src="https://scontent.fixe1-1.fna.fbcdn.net/v/t39.30808-6/469180573_464926909957234_2214399507714894681_n.jpg?_nc_cat=106&ccb=1-7&_nc_sid=833d8c&_nc_ohc=k9XwQ2ZLexkQ7kNvwGJHtiF&_nc_oc=AdldwQ_EjI5JgiD_vozl4p-9CoMj4ka8Z8eKD9o-ggLogOepqg15_yfNxPL_q9EYojh-Y2Y4RfIrJe23w5zh1FsH&_nc_zt=23&_nc_ht=scontent.fixe1-1.fna&_nc_gid=Ki1Hvr4TLezGK0fAjnB__g&oh=00_AfRzZLW6zNiQBFAEtcOO83xj9HfvRL_FB_dWOmCsQxo6BQ&oe=688582B2"
+                    alt="Karnataka University Dharwad Logo" class="nav__logo">
+                <div class="nav__brand-text">
+                    <h3>MBA Program</h3>
+                    <span>Karnataka University Dharwad</span>
+                </div>
+            </div>
+
+            <div class="nav__menu" id="nav-menu">
+                <ul class="nav__list">
+                    <li class="nav__item"><a href="#home" class="nav__link">Home</a></li>
+                    <li class="nav__item"><a href="#programs" class="nav__link">Programs</a></li>
+                    <li class="nav__item"><a href="#quiz" class="nav__link">Find Your Stream</a></li>
+                    <li class="nav__item"><a href="#poll" class="nav__link">Poll</a></li>
+                    <li class="nav__item"><a href="#faculty" class="nav__link">Faculty</a></li>
+                    <li class="nav__item"><a href="#testimonials" class="nav__link">Success Stories</a></li>
+                    <li class="nav__item"><a href="#recruiters" class="nav__link">Placements</a></li>
+                    <li class="nav__item"><a href="#contact" class="nav__link">Contact</a></li>
+                </ul>
+            </div>
+
+            <div class="nav__toggle" id="nav-toggle">
+                <i class="nav__toggle-icon"></i>
+            </div>
+        </nav>
+    </header>
+
+    <!-- Hero Section -->
+    <section id="home" class="hero-carousel">
+        <div class="carousel-container">
+            <div class="carousel-slides">
+                <div class="slide active">
+                    <img src="https://pplx-res.cloudinary.com/image/upload/v1748811643/pplx_project_search_images/a6793494d0e243abb2f1cf8c6ca47ca2d000855c.jpg"
+                        alt="Modern campus building">
+                    <div class="slide-content">
+                        <h2>Transform Your Career with MBA</h2>
+                        <p>Join Karnataka University Dharwad's prestigious MBA program</p>
+                        <button class="btn btn--primary">Apply Now</button>
+                    </div>
+                </div>
+                <div class="slide">
+                    <img src="https://pplx-res.cloudinary.com/image/upload/v1753186751/pplx_project_search_images/e241bba30f8c2a20f0e194e0b3be9288738021e9.jpg"
+                        alt="MBA graduates celebrating">
+                    <div class="slide-content">
+                        <h2>Success Stories Begin Here</h2>
+                        <p>Join our alumni network of successful professionals</p>
+                        <button class="btn btn--primary">View Success Stories</button>
+                    </div>
+                </div>
+                <div class="slide">
+                    <img src="https://pplx-res.cloudinary.com/image/upload/v1753190536/pplx_project_search_images/85e58a237f3fae7a0ae448438bea8e4f4e5f72ec.jpg"
+                        alt="Students studying together">
+                    <div class="slide-content">
+                        <h2>Collaborative Learning Environment</h2>
+                        <p>Learn with diverse peers in our modern facilities</p>
+                        <button class="btn btn--primary">Book Campus Visit</button>
+                    </div>
+                </div>
+            </div>
+            <button class="carousel__btn carousel__btn--prev" aria-label="Previous slide">‹</button>
+            <button class="carousel__btn carousel__btn--next" aria-label="Next slide">›</button>
+            <div class="carousel-indicators">
+                <button class="indicator active" data-slide="0"></button>
+                <button class="indicator" data-slide="1"></button>
+                <button class="indicator" data-slide="2"></button>
+            </div>
+        </div>
+    </section>
+
+    <!-- Programs Section -->
+    <section class="programs" id="programs">
+        <div class="container">
+            <div class="section__header">
+                <h2 class="section__title">MBA Specializations</h2>
+                <p class="section__description">Choose from 6 comprehensive specializations designed to accelerate your
+                    career</p>
+            </div>
+
+            <div class="programs__carousel">
+                <div class="carousel__container" id="programs-carousel">
+                    <!-- Program cards will be generated by JavaScript -->
+                </div>
+                <button class="carousel__btn carousel__btn--prev" id="programs-prev">&lt;</button>
+                <button class="carousel__btn carousel__btn--next" id="programs-next">&gt;</button>
+            </div>
+        </div>
+    </section>
+
+    <!-- Quiz Section -->
+    <section class="quiz" id="quiz">
+        <div class="container">
+            <div class="section__header">
+                <h2 class="section__title">Find Your Ideal MBA Specialization</h2>
+                <p class="section__description">Take our personalized quiz to discover which MBA stream aligns with your
+                    career goals</p>
+            </div>
+
+            <div class="quiz__container">
+                <div class="quiz__content" id="quiz-content">
+                    <div class="quiz__loading" id="quiz-loading">
+                        <p>Loading quiz questions...</p>
+                    </div>
+                </div>
+
+                <div class="quiz__result" id="quiz-result" style="display: none;">
+                    <div class="quiz__result-content">
+                        <h3>Your Recommended Specialization</h3>
+                        <div class="quiz__recommendation" id="quiz-recommendation"></div>
+                        <button class="btn btn--primary" onclick="location.href='#contact'">Apply Now</button>
+                        <button class="btn btn--outline" onclick="restartQuiz()">Retake Quiz</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Poll Section -->
+    <section class="poll" id="poll">
+        <div class="container">
+            <div class="section__header">
+                <h2 class="section__title">What Matters Most in Your MBA Journey?</h2>
+                <p class="section__description">Join the conversation and see what our community values most</p>
+            </div>
+
+            <div class="poll__container">
+                <div class="poll__question" id="poll-question">
+                    <div class="poll__options" id="poll-options">
+                        <button class="poll__option" data-option="career-growth">Career Growth</button>
+                        <button class="poll__option" data-option="salary-increase">Salary Increase</button>
+                        <button class="poll__option" data-option="industry-network">Industry Network</button>
+                        <button class="poll__option" data-option="skill-development">Skill Development</button>
+                        <button class="poll__option" data-option="entrepreneurship">Entrepreneurship</button>
+                    </div>
+                </div>
+
+                <div class="poll__results" id="poll-results" style="display: none;">
+                    <h3>Live Results</h3>
+                    <div class="poll__results-container" id="poll-results-container">
+                        <!-- Results will be populated by JavaScript -->
+                    </div>
+                    <p class="poll__total" id="poll-total">Total votes: <span id="total-votes">0</span></p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Faculty Section -->
+    <section id="faculty" class="faculty-section">
+        <div class="container">
+            <h2>Meet Our Faculty</h2>
+            <div class="faculty-carousel">
+                <div class="faculty-container">
+                    <div class="faculty-slide">
+                        <div class="faculty-card">
+                            <div class="faculty-info">
+                                <h3>Dr. Rajesh Kumar</h3>
+                                <p class="designation">Professor & Head - Finance</p>
+                                <p class="qualifications">Ph.D. Finance, IIM Bangalore</p>
+                                <p class="experience">15 years experience</p>
+                                <p class="specialization">Corporate Finance, Investment Banking</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="faculty-slide">
+                        <div class="faculty-card">
+                            <div class="faculty-info">
+                                <h3>Dr. Priya Sharma</h3>
+                                <p class="designation">Associate Professor - Marketing</p>
+                                <p class="qualifications">Ph.D. Marketing, ISB Hyderabad</p>
+                                <p class="experience">12 years experience</p>
+                                <p class="specialization">Digital Marketing, Consumer Behavior</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="faculty-slide">
+                        <div class="faculty-card">
+                            <div class="faculty-info">
+                                <h3>Dr. Amit Patel</h3>
+                                <p class="designation">Professor - Operations</p>
+                                <p class="qualifications">Ph.D. Operations, IIT Delhi</p>
+                                <p class="experience">18 years experience</p>
+                                <p class="specialization">Supply Chain, Quality Management</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="faculty-slide">
+                        <div class="faculty-card">
+                            <div class="faculty-info">
+                                <h3>Dr. Sunita Rao</h3>
+                                <p class="designation">Associate Professor - HR</p>
+                                <p class="qualifications">Ph.D. HRM, XLRI Jamshedpur</p>
+                                <p class="experience">10 years experience</p>
+                                <p class="specialization">Organizational Behavior, Talent Management</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <button class="carousel-btn carousel-btn--prev" id="facultyPrev">‹</button>
+                <button class="carousel-btn carousel-btn--next" id="facultyNext">›</button>
+            </div>
+        </div>
+    </section>
+
+    <!-- Campus Life Carousel -->
+    <section id="campus" class="campus-section">
+        <div class="container">
+            <h2>Campus Life</h2>
+            <div class="campus-carousel">
+                <div class="campus-container">
+                    <div class="campus-slide">
+                        <img src="https://pplx-res.cloudinary.com/image/upload/v1753190537/pplx_project_search_images/3f5758ec4ce18882e9652d20d21722715473369f.jpg"
+                            alt="Students in library">
+                        <div class="campus-info">
+                            <h3>Modern Library Facilities</h3>
+                            <p>State-of-the-art library with digital resources and study spaces</p>
+                        </div>
+                    </div>
+                    <div class="campus-slide">
+                        <img src="https://pplx-res.cloudinary.com/image/upload/v1753190536/pplx_project_search_images/6bf0d8edf92b1058f4288d2b44d6096c28808781.jpg"
+                            alt="Classroom interaction">
+                        <div class="campus-info">
+                            <h3>Interactive Classrooms</h3>
+                            <p>Modern lecture halls equipped with latest technology</p>
+                        </div>
+                    </div>
+                    <div class="campus-slide">
+                        <img src="https://pplx-res.cloudinary.com/image/upload/v1753190536/pplx_project_search_images/1009dce80e75200cc74bd44f6384cf63ecc60988.jpg"
+                            alt="Group learning">
+                        <div class="campus-info">
+                            <h3>Collaborative Learning</h3>
+                            <p>Group study areas promoting peer-to-peer learning</p>
+                        </div>
+                    </div>
+                    <div class="campus-slide">
+                        <img src="https://pplx-res.cloudinary.com/image/upload/v1753190537/pplx_project_search_images/07633d4fb4a9f92cd006ed863fdf3767470adfec.jpg"
+                            alt="Diverse study environment">
+                        <div class="campus-info">
+                            <h3>Diverse Community</h3>
+                            <p>Students from various backgrounds creating a rich learning environment</p>
+                        </div>
+                    </div>
+                </div>
+                <button class="carousel-btn carousel-btn--prev" id="campusPrev">‹</button>
+                <button class="carousel-btn carousel-btn--next" id="campusNext">›</button>
+            </div>
+        </div>
+    </section>
+
+    <!-- Testimonials Section -->
+    <section class="testimonials" id="testimonials">
+        <div class="container">
+            <div class="section__header">
+                <h2 class="section__title">Success Stories</h2>
+                <p class="section__description">Hear from our successful alumni who are making their mark in the
+                    business world</p>
+            </div>
+
+            <div class="testimonials__grid" id="testimonials-grid">
+                <!-- Testimonial cards will be generated by JavaScript -->
+            </div>
+        </div>
+    </section>
+
+    <!-- Recruiters Section -->
+    <section class="recruiters" id="recruiters">
+        <div class="container">
+            <div class="section__header">
+                <h2 class="section__title">Our Recruiting Partners</h2>
+                <p class="section__description">Join a network of leading companies that regularly recruit our graduates
+                </p>
+            </div>
+
+            <div class="recruiters__slider">
+                <div class="recruiters__track" id="recruiters-track">
+                    <!-- Recruiter logos will be generated by JavaScript -->
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Contact Section -->
+    <section class="contact" id="contact">
+        <div class="container">
+            <div class="section__header">
+                <h2 class="section__title">Get in Touch</h2>
+                <p class="section__description">Ready to transform your career? Contact us to learn more about our MBA
+                    programs</p>
+            </div>
+
+            <div class="contact__content">
+                <div class="contact__form-container">
+                    <form class="contact__form" id="contact-form">
+                        <div class="form-group">
+                            <label for="name" class="form-label">Full Name *</label>
+                            <input type="text" id="name" name="name" class="form-control" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="email" class="form-label">Email Address *</label>
+                            <input type="email" id="email" name="email" class="form-control" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="phone" class="form-label">Phone Number *</label>
+                            <input type="tel" id="phone" name="phone" class="form-control" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="specialization" class="form-label">Interested Specialization</label>
+                            <select id="specialization" name="specialization" class="form-control">
+                                <option value="">Select a specialization</option>
+                                <option value="Marketing">Marketing</option>
+                                <option value="Finance">Finance</option>
+                                <option value="Human Resources (HR)">Human Resources (HR)</option>
+                                <option value="Operations & Supply Chain">Operations & Supply Chain</option>
+                                <option value="Business Analytics / Information Systems">Business Analytics /
+                                    Information Systems</option>
+                                <option value="General Management / Strategy">General Management / Strategy</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="message" class="form-label">Message</label>
+                            <textarea id="message" name="message" class="form-control" rows="4"
+                                placeholder="Tell us about your career goals and why you're interested in our MBA program..."></textarea>
+                        </div>
+
+                        <button type="submit" class="btn btn--primary btn--full-width">Send Message</button>
+                    </form>
+
+                    <div class="contact__feedback" id="contact-feedback" style="display: none;">
+                        <div class="feedback__content" id="feedback-content">
+                            <!-- Success/error messages will be displayed here -->
+                        </div>
+                    </div>
+                </div>
+
+                <div class="contact__info">
+                    <div class="contact__item">
+                        <h4>Address</h4>
+                        <p>Karnataka University Dharwad<br>Dharwad, Karnataka 580003<br>India</p>
+                    </div>
+
+                    <div class="contact__item">
+                        <h4>Phone</h4>
+                        <p>+91-836-2779101</p>
+                    </div>
+
+                    <div class="contact__item">
+                        <h4>Email</h4>
+                        <p>mba@kud.ac.in</p>
+                    </div>
+
+                    <div class="contact__item">
+                        <h4>Office Hours</h4>
+                        <p>Monday - Friday: 9:00 AM - 5:00 PM<br>Saturday: 9:00 AM - 1:00 PM</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer__content">
+                <div class="footer__brand">
+                    <h4>MBA Program</h4>
+                    <p>Karnataka University Dharwad</p>
+                </div>
+
+                <div class="footer__links">
+                    <a href="#programs">Programs</a>
+                    <a href="#faculty">Faculty</a>
+                    <a href="#contact">Contact</a>
+                </div>
+
+                <div class="footer__copyright">
+                    <p>&copy; 2025 Karnataka University Dharwad. All rights reserved.</p>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <script src="app.js"></script>
+</body>
+
+</html>
