@@ -1,6 +1,6 @@
 // MBA Website JavaScript - Complete Fixed Version
 // Google Sheets API endpoint (replace with actual deployment URL)
-const API_URL = 'https://script.google.com/macros/s/AKfycbw4cQZJvs-GY7DygJ2IU5BKT8HEv3QcYGkPS8wh6LGEZyDrF6l8tGTdP7vF5TqT88c6tg/exec';
+const API_URL = 'https://corsproxy.io/?https://script.google.com/macros/s/AKfycbw4cQZJvs-GY7DygJ2IU5BKT8HEv3QcYGkPS8wh6LGEZyDrF6l8tGTdP7vF5TqT88c6tg/exec';
 
 
 
