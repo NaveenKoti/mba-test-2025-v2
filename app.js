@@ -1,6 +1,6 @@
 // MBA Website JavaScript - Complete Fixed Version
 // Google Sheets API endpoint (replace with actual deployment URL)
-const API_URL = 'https://corsproxy.io/?https://script.google.com/macros/s/AKfycbw4cQZJvs-GY7DygJ2IU5BKT8HEv3QcYGkPS8wh6LGEZyDrF6l8tGTdP7vF5TqT88c6tg/exec';
+const API_URL = 'https://script.google.com/macros/s/AKfycbw4cQZJvs-GY7DygJ2IU5BKT8HEv3QcYGkPS8wh6LGEZyDrF6l8tGTdP7vF5TqT88c6tg/exec';
 
 
 
@@ -788,9 +788,11 @@ async function submitPollVote(option) {
         if (response.ok) {
             // Refresh results from server
             setTimeout(loadPollData, 1000);
+        } else {
+            console.error('Poll submission failed:', response.statusText);
         }
     } catch (error) {
-        console.log('Poll submission failed, using local data');
+        console.error('Poll submission failed:', error);
     }
 }
 
@@ -943,8 +945,15 @@ async function handleContactSubmit(event) {
             timestamp: new Date().toISOString()
         };
 
-        // Simulate success since backend might not be connected
-        setTimeout(() => {
+        const response = await fetch(API_URL, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(data)
+        });
+
+        if (response.ok) {
             if (feedback && feedbackContent) {
                 feedback.className = 'contact__feedback success';
                 feedbackContent.innerHTML = `
@@ -952,58 +961,33 @@ async function handleContactSubmit(event) {
                     <p>Thank you for your interest in our MBA program. We'll get back to you within 24 hours.</p>
                 `;
                 form.reset();
-                
                 feedback.style.display = 'block';
             }
-            
-            // Reset button
-            if (submitBtn) {
-                submitBtn.disabled = false;
-                submitBtn.textContent = 'Send Message';
-            }
-
-            // Hide feedback after 5 seconds
-            setTimeout(() => {
-                if (feedback) feedback.style.display = 'none';
-            }, 5000);
-        }, 1000);
-
-        // Try to submit to backend
-        try {
-            await fetch(API_URL, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify(data)
-            });
-        } catch (error) {
-            console.log('Backend submission failed, showing success anyway');
+        } else {
+            throw new Error('Backend submission failed');
         }
-
     } catch (error) {
-        // Error handling
+        console.error('Contact submission failed:', error);
         if (feedback && feedbackContent) {
             feedback.className = 'contact__feedback error';
             feedbackContent.innerHTML = `
                 <h4>Message Received</h4>
                 <p>Thank you for your interest! We've received your message and will contact you soon.</p>
             `;
-            
             feedback.style.display = 'block';
         }
-        
-        // Reset button
-        if (submitBtn) {
-            submitBtn.disabled = false;
-            submitBtn.textContent = 'Send Message';
-        }
-
-        // Hide feedback after 5 seconds
-        setTimeout(() => {
-            if (feedback) feedback.style.display = 'none';
-        }, 5000);
     }
+
+    // Reset button
+    if (submitBtn) {
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'Send Message';
+    }
+
+    // Hide feedback after 5 seconds
+    setTimeout(() => {
+        if (feedback) feedback.style.display = 'none';
+    }, 5000);
 }
 
 // =================
