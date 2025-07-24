@@ -1,11 +1,11 @@
-// MBA Website JavaScript - GA4 Tracking Version
+// MBA Website JavaScript - GA4 Tracking Version with Enhanced Form Handler
 // Google Analytics 4 Configuration
 const GA4_CONFIG = {
-    measurementId: 'G-9FVVBS9GQV', // Replace with your GA4 Measurement ID
+    measurementId: 'G-9FVVBS9GQV', // Your GA4 Measurement ID
     debug: true // Set to true for development
 };
 
-// Application data (keeping your original data structure)
+// Application data
 const appData = {
     programs: [
         {
@@ -191,25 +191,59 @@ class GA4Tracker {
     }
 
     initializeGA4() {
+        // Check if gtag is already loaded
+        if (typeof gtag !== 'undefined') {
+            console.log('gtag already exists, configuring...');
+            this.configureGA4();
+            return;
+        }
+
         // Load GA4 script
         const script = document.createElement('script');
         script.async = true;
         script.src = `https://www.googletagmanager.com/gtag/js?id=${this.measurementId}`;
+        script.onload = () => {
+            console.log('GA4 script loaded successfully');
+            this.configureGA4();
+        };
+        script.onerror = () => {
+            console.error('Failed to load GA4 script');
+        };
         document.head.appendChild(script);
+    }
 
+    configureGA4() {
         // Initialize gtag
         window.dataLayer = window.dataLayer || [];
-        window.gtag = function() { dataLayer.push(arguments); };
+        window.gtag = function() { 
+            dataLayer.push(arguments);
+            if (this.debug) {
+                console.log('gtag called with:', arguments);
+            }
+        }.bind(this);
         
         gtag('js', new Date());
         gtag('config', this.measurementId, {
             debug_mode: this.debug,
-            session_id: this.sessionId,
-            user_id: this.userId
+            send_page_view: true
         });
 
         if (this.debug) {
-            console.log('GA4 initialized with ID:', this.measurementId);
+            console.log('GA4 configured with ID:', this.measurementId);
+        }
+
+        // Test connection
+        this.testConnection();
+    }
+
+    testConnection() {
+        if (typeof gtag !== 'undefined') {
+            gtag('event', 'ga4_test_connection', {
+                event_category: 'debug',
+                event_label: 'connection_test',
+                test_timestamp: new Date().toISOString()
+            });
+            console.log('GA4 test event sent');
         }
     }
 
@@ -228,33 +262,35 @@ class GA4Tracker {
 
     // Quiz tracking methods
     trackQuizStart() {
-        if (typeof gtag !== 'undefined') {
-            gtag('event', 'quiz_start', {
-                event_category: 'engagement',
-                event_label: 'mba_specialization_quiz',
-                session_id: this.sessionId,
-                user_id: this.userId,
-                timestamp: new Date().toISOString()
-            });
+        if (typeof gtag === 'undefined') {
+            console.error('gtag not available for quiz_start event');
+            return;
         }
 
-        if (this.debug) console.log('Quiz started tracked');
+        gtag('event', 'quiz_start', {
+            event_category: 'engagement',
+            event_label: 'mba_specialization_quiz',
+            session_id: this.sessionId,
+            user_id: this.userId
+        });
+
+        if (this.debug) console.log('Quiz start event tracked');
     }
 
     trackQuizQuestion(questionIndex, question, selectedAnswer, stream) {
-        if (typeof gtag !== 'undefined') {
-            gtag('event', 'quiz_question_answered', {
-                event_category: 'engagement',
-                event_label: 'mba_quiz',
-                question_number: questionIndex + 1,
-                question_text: question,
-                selected_answer: selectedAnswer,
-                recommended_stream: stream,
-                session_id: this.sessionId,
-                user_id: this.userId,
-                timestamp: new Date().toISOString()
-            });
+        if (typeof gtag === 'undefined') {
+            console.error('gtag not available for quiz_question_answered event');
+            return;
         }
+
+        gtag('event', 'quiz_question_answered', {
+            event_category: 'engagement',
+            question_number: questionIndex + 1,
+            selected_answer: selectedAnswer,
+            recommended_stream: stream,
+            session_id: this.sessionId,
+            user_id: this.userId
+        });
 
         if (this.debug) {
             console.log('Quiz question tracked:', { questionIndex, selectedAnswer, stream });
@@ -262,29 +298,31 @@ class GA4Tracker {
     }
 
     trackQuizCompletion(finalStream, allAnswers, timeTaken) {
-        if (typeof gtag !== 'undefined') {
-            gtag('event', 'quiz_completed', {
-                event_category: 'conversion',
-                event_label: 'mba_quiz_completion',
-                recommended_stream: finalStream,
-                questions_answered: allAnswers.length,
-                time_taken_seconds: timeTaken,
-                session_id: this.sessionId,
-                user_id: this.userId,
-                timestamp: new Date().toISOString()
-            });
-
-            // Track each answer as custom parameters
-            allAnswers.forEach((answer, index) => {
-                gtag('event', 'quiz_answer_summary', {
-                    event_category: 'engagement',
-                    question_number: index + 1,
-                    selected_stream: answer.stream,
-                    answer_text: answer.text,
-                    user_id: this.userId
-                });
-            });
+        if (typeof gtag === 'undefined') {
+            console.error('gtag not available for quiz_completed event');
+            return;
         }
+
+        gtag('event', 'quiz_completed', {
+            event_category: 'conversion',
+            event_label: 'mba_quiz_completion',
+            recommended_stream: finalStream,
+            questions_answered: allAnswers.length,
+            time_taken_seconds: timeTaken,
+            session_id: this.sessionId,
+            user_id: this.userId
+        });
+
+        // Track each answer as custom parameters
+        allAnswers.forEach((answer, index) => {
+            gtag('event', 'quiz_answer_summary', {
+                event_category: 'engagement',
+                question_number: index + 1,
+                selected_stream: answer.stream,
+                answer_text: answer.text,
+                user_id: this.userId
+            });
+        });
 
         if (this.debug) {
             console.log('Quiz completion tracked:', { finalStream, timeTaken });
@@ -293,80 +331,437 @@ class GA4Tracker {
 
     // Poll tracking methods
     trackPollVote(option) {
-        if (typeof gtag !== 'undefined') {
-            gtag('event', 'poll_vote', {
-                event_category: 'engagement',
-                event_label: 'mba_motivation_poll',
-                selected_option: option,
-                session_id: this.sessionId,
-                user_id: this.userId,
-                timestamp: new Date().toISOString()
-            });
+        if (typeof gtag === 'undefined') {
+            console.error('gtag not available for poll_vote event');
+            return;
         }
+
+        gtag('event', 'poll_vote', {
+            event_category: 'engagement',
+            selected_option: option,
+            session_id: this.sessionId,
+            user_id: this.userId
+        });
 
         if (this.debug) {
             console.log('Poll vote tracked:', option);
         }
     }
 
-    // Contact form tracking methods
-    trackContactFormStart() {
-        if (typeof gtag !== 'undefined') {
-            gtag('event', 'form_start', {
-                event_category: 'engagement',
-                event_label: 'contact_form',
-                form_name: 'mba_contact_form',
-                session_id: this.sessionId,
-                user_id: this.userId,
-                timestamp: new Date().toISOString()
-            });
+    // Program interest tracking
+    trackProgramInterest(programName) {
+        if (typeof gtag === 'undefined') {
+            console.error('gtag not available for program_interest event');
+            return;
         }
 
-        if (this.debug) console.log('Contact form start tracked');
+        gtag('event', 'program_interest', {
+            event_category: 'engagement',
+            event_label: 'program_click',
+            program_name: programName,
+            session_id: this.sessionId,
+            user_id: this.userId
+        });
+
+        if (this.debug) {
+            console.log('Program interest tracked:', programName);
+        }
+    }
+}
+
+// Enhanced Contact Form Handler
+class ContactFormHandler {
+    constructor(ga4Tracker) {
+        this.ga4Tracker = ga4Tracker;
+        this.form = null;
+        this.isSubmitting = false;
+        this.formStartTracked = false;
+        this.init();
     }
 
-    trackContactFormSubmission(formData) {
-        if (typeof gtag !== 'undefined') {
+    init() {
+        this.form = document.getElementById('contact-form');
+        if (!this.form) {
+            console.warn('Contact form not found');
+            return;
+        }
+
+        this.setupEventListeners();
+        console.log('Contact form handler initialized');
+    }
+
+    setupEventListeners() {
+        // Track form start on first interaction
+        const formInputs = this.form.querySelectorAll('input, textarea, select');
+        formInputs.forEach(input => {
+            input.addEventListener('focus', () => this.handleFormStart(), { once: true });
+        });
+
+        // Handle form submission
+        this.form.addEventListener('submit', (e) => this.handleSubmit(e));
+
+        // Real-time validation
+        formInputs.forEach(input => {
+            input.addEventListener('blur', () => this.validateField(input));
+            input.addEventListener('input', () => this.clearFieldError(input));
+        });
+    }
+
+    handleFormStart() {
+        if (!this.formStartTracked) {
+            this.trackFormStart();
+            this.formStartTracked = true;
+        }
+    }
+
+    async handleSubmit(event) {
+        event.preventDefault();
+        
+        if (this.isSubmitting) return;
+
+        console.log('Form submission started');
+        
+        // Collect all form data
+        const formData = this.collectFormData();
+        console.log('Form data collected:', formData);
+
+        // Validate form
+        const validation = this.validateForm(formData);
+        if (!validation.isValid) {
+            this.showValidationErrors(validation.errors);
+            this.trackFormError('Validation failed: ' + validation.errors.join(', '));
+            return;
+        }
+
+        // Start submission process
+        this.startSubmission();
+
+        try {
+            // Process the submission
+            await this.processSubmission(formData);
+            
+            // Track successful submission
+            this.trackFormSubmission(formData);
+            
+            // Show success and reset
+            this.showSuccess(formData);
+            this.resetForm();
+            
+        } catch (error) {
+            console.error('Form submission error:', error);
+            this.trackFormError(error.message);
+            this.showError('There was an error submitting your form. Please try again.');
+        } finally {
+            this.endSubmission();
+        }
+    }
+
+    collectFormData() {
+        const formData = {};
+        const formElements = this.form.elements;
+
+        for (let element of formElements) {
+            if (element.name && element.type !== 'submit') {
+                if (element.type === 'checkbox') {
+                    formData[element.name] = element.checked;
+                } else if (element.type === 'radio') {
+                    if (element.checked) {
+                        formData[element.name] = element.value;
+                    }
+                } else {
+                    formData[element.name] = element.value.trim();
+                }
+            }
+        }
+
+        // Add metadata
+        formData.timestamp = new Date().toISOString();
+        formData.userAgent = navigator.userAgent;
+        formData.referrer = document.referrer;
+        formData.currentUrl = window.location.href;
+
+        return formData;
+    }
+
+    validateForm(formData) {
+        const errors = [];
+        
+        // Required field validation
+        if (!formData.name || formData.name.length < 2) {
+            errors.push('Name must be at least 2 characters long');
+            this.markFieldError('name');
+        }
+
+        if (!formData.email || !this.isValidEmail(formData.email)) {
+            errors.push('Please enter a valid email address');
+            this.markFieldError('email');
+        }
+
+        if (!formData.message || formData.message.length < 10) {
+            errors.push('Message must be at least 10 characters long');
+            this.markFieldError('message');
+        }
+
+        // Honeypot check
+        if (formData.website) {
+            errors.push('Spam detected');
+        }
+
+        // Phone validation (if provided)
+        if (formData.phone && formData.phone.length > 0) {
+            const phoneRegex = /^[\+]?[1-9][\d]{0,15}$/;
+            if (!phoneRegex.test(formData.phone.replace(/[\s\-\(\)]/g, ''))) {
+                errors.push('Please enter a valid phone number');
+                this.markFieldError('phone');
+            }
+        }
+
+        return {
+            isValid: errors.length === 0,
+            errors: errors
+        };
+    }
+
+    isValidEmail(email) {
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        return emailRegex.test(email);
+    }
+
+    markFieldError(fieldName) {
+        const field = this.form.querySelector(`[name="${fieldName}"]`);
+        if (field) {
+            field.classList.add('error');
+        }
+    }
+
+    clearFieldError(field) {
+        field.classList.remove('error');
+        const errorElement = field.parentNode.querySelector('.field-error');
+        if (errorElement) {
+            errorElement.remove();
+        }
+    }
+
+    validateField(field) {
+        const value = field.value.trim();
+        const fieldName = field.name;
+        let isValid = true;
+        let errorMessage = '';
+
+        switch (fieldName) {
+            case 'name':
+                if (value.length < 2) {
+                    isValid = false;
+                    errorMessage = 'Name must be at least 2 characters long';
+                }
+                break;
+            case 'email':
+                if (!this.isValidEmail(value)) {
+                    isValid = false;
+                    errorMessage = 'Please enter a valid email address';
+                }
+                break;
+            case 'message':
+                if (value.length < 10) {
+                    isValid = false;
+                    errorMessage = 'Message must be at least 10 characters long';
+                }
+                break;
+        }
+
+        if (isValid) {
+            this.clearFieldError(field);
+        } else {
+            this.markFieldError(fieldName);
+            this.showFieldError(field, errorMessage);
+        }
+
+        return isValid;
+    }
+
+    showFieldError(field, message) {
+        this.clearFieldError(field);
+        const errorElement = document.createElement('span');
+        errorElement.className = 'field-error';
+        errorElement.textContent = message;
+        field.parentNode.appendChild(errorElement);
+    }
+
+    async processSubmission(formData) {
+        // Simulate processing time for better UX
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        
+        // Store the submission data
+        this.storeSubmissionData(formData);
+        
+        return { success: true, data: formData };
+    }
+
+    storeSubmissionData(formData) {
+        try {
+            // Store in localStorage for persistence
+            const submissions = JSON.parse(localStorage.getItem('kud_form_submissions') || '[]');
+            submissions.push({
+                ...formData,
+                id: Date.now(),
+                submittedAt: new Date().toISOString()
+            });
+            localStorage.setItem('kud_form_submissions', JSON.stringify(submissions));
+            
+            // Also store as lead data for analytics
+            const leads = JSON.parse(localStorage.getItem('kud_leads') || '[]');
+            leads.push({
+                ...formData,
+                id: Date.now(),
+                source: 'website_contact_form',
+                submittedAt: new Date().toISOString()
+            });
+            localStorage.setItem('kud_leads', JSON.stringify(leads));
+            
+            console.log('Form data stored successfully:', formData);
+        } catch (error) {
+            console.error('Error storing form data:', error);
+        }
+    }
+
+    startSubmission() {
+        this.isSubmitting = true;
+        const submitBtn = this.form.querySelector('button[type="submit"]');
+        const btnText = submitBtn.querySelector('.btn-text');
+        const btnLoading = submitBtn.querySelector('.btn-loading');
+        
+        submitBtn.disabled = true;
+        if (btnText) btnText.style.display = 'none';
+        if (btnLoading) btnLoading.style.display = 'inline';
+        
+        // Fallback if no specific elements found
+        if (!btnText && !btnLoading) {
+            submitBtn.textContent = 'Submitting...';
+        }
+    }
+
+    endSubmission() {
+        this.isSubmitting = false;
+        const submitBtn = this.form.querySelector('button[type="submit"]');
+        const btnText = submitBtn.querySelector('.btn-text');
+        const btnLoading = submitBtn.querySelector('.btn-loading');
+        
+        submitBtn.disabled = false;
+        if (btnText) btnText.style.display = 'inline';
+        if (btnLoading) btnLoading.style.display = 'none';
+        
+        // Fallback if no specific elements found
+        if (!btnText && !btnLoading) {
+            submitBtn.textContent = 'Send Message';
+        }
+    }
+
+    showValidationErrors(errors) {
+        const errorMessage = errors.join('<br>');
+        this.showError(errorMessage);
+    }
+
+    showSuccess(formData) {
+        const feedback = document.getElementById('contact-feedback');
+        const feedbackContent = document.getElementById('feedback-content');
+        
+        if (feedback && feedbackContent) {
+            feedback.className = 'contact__feedback success';
+            feedbackContent.innerHTML = `
+                <strong>Thank you, ${formData.name}!</strong><br>
+                We've received your inquiry about our MBA program and will contact you within 24 hours at <strong>${formData.email}</strong>.
+                ${formData.program ? `<br><br>We'll provide detailed information about our <strong>${formData.program}</strong> specialization.` : ''}
+            `;
+            feedback.style.display = 'block';
+            
+            // Auto-hide after 10 seconds
+            setTimeout(() => {
+                if (feedback) feedback.style.display = 'none';
+            }, 10000);
+        }
+    }
+
+    showError(message) {
+        const feedback = document.getElementById('contact-feedback');
+        const feedbackContent = document.getElementById('feedback-content');
+        
+        if (feedback && feedbackContent) {
+            feedback.className = 'contact__feedback error';
+            feedbackContent.innerHTML = message;
+            feedback.style.display = 'block';
+            
+            // Auto-hide after 8 seconds
+            setTimeout(() => {
+                if (feedback) feedback.style.display = 'none';
+            }, 8000);
+        }
+    }
+
+    resetForm() {
+        this.form.reset();
+        this.formStartTracked = false;
+        
+        // Clear all error states
+        const errorFields = this.form.querySelectorAll('.error');
+        errorFields.forEach(field => field.classList.remove('error'));
+        
+        const errorMessages = this.form.querySelectorAll('.field-error');
+        errorMessages.forEach(msg => msg.remove());
+    }
+
+    // GA4 Tracking Methods
+    trackFormStart() {
+        if (this.ga4Tracker && typeof gtag !== 'undefined') {
+            gtag('event', 'form_start', {
+                event_category: 'engagement',
+                event_label: 'contact_form_start',
+                form_name: 'mba_contact_form'
+            });
+            console.log('Form start tracked');
+        }
+    }
+
+    trackFormSubmission(formData) {
+        if (this.ga4Tracker && typeof gtag !== 'undefined') {
+            // Main form submission event
             gtag('event', 'form_submit', {
                 event_category: 'conversion',
                 event_label: 'contact_form_submission',
                 form_name: 'mba_contact_form',
                 user_name: formData.name,
                 user_email: formData.email,
-                message_length: formData.message.length,
-                session_id: this.sessionId,
-                user_id: this.userId,
-                timestamp: new Date().toISOString()
+                user_phone: formData.phone || '',
+                program_interest: formData.program || 'not_specified',
+                message_length: formData.message ? formData.message.length : 0
             });
 
-            // Mark as conversion
+            // Lead generation conversion event
             gtag('event', 'generate_lead', {
                 event_category: 'conversion',
+                event_label: 'mba_inquiry',
                 value: 1,
-                currency: 'USD'
+                currency: 'USD',
+                lead_source: 'website_contact_form',
+                program_interest: formData.program || 'not_specified'
             });
-        }
 
-        if (this.debug) {
-            console.log('Contact form submission tracked:', formData.name);
+            console.log('Form submission tracked:', {
+                name: formData.name,
+                email: formData.email,
+                program: formData.program
+            });
         }
     }
 
-    // Page interaction tracking
-    trackProgramInterest(programName) {
-        if (typeof gtag !== 'undefined') {
-            gtag('event', 'program_interest', {
-                event_category: 'engagement',
-                event_label: 'program_click',
-                program_name: programName,
-                session_id: this.sessionId,
-                user_id: this.userId,
-                timestamp: new Date().toISOString()
+    trackFormError(errorMessage) {
+        if (this.ga4Tracker && typeof gtag !== 'undefined') {
+            gtag('event', 'form_error', {
+                event_category: 'error',
+                event_label: 'contact_form_error',
+                error_message: errorMessage,
+                form_name: 'mba_contact_form'
             });
-        }
-
-        if (this.debug) {
-            console.log('Program interest tracked:', programName);
+            console.log('Form error tracked:', errorMessage);
         }
     }
 }
@@ -403,7 +798,7 @@ function initializeApp() {
 }
 
 // =================
-// QUIZ FUNCTIONALITY - FIXED
+// QUIZ FUNCTIONALITY
 // =================
 function initializeQuiz() {
     console.log('Initializing quiz...');
@@ -627,7 +1022,7 @@ function restartQuiz() {
 }
 
 // =================
-// POLL FUNCTIONALITY - FIXED RESET ISSUE
+// POLL FUNCTIONALITY
 // =================
 function initializePoll() {
     console.log('Initializing poll...');
@@ -749,125 +1144,16 @@ function showPollResults() {
 }
 
 // =================
-// CONTACT FORM WITH GA4 TRACKING
+// CONTACT FORM INITIALIZATION
 // =================
 function initializeContactForm() {
-    const form = document.getElementById('contact-form');
-    if (!form) return;
-
-    // Track when user starts interacting with form
-    let formStartTracked = false;
-    const formInputs = form.querySelectorAll('input, textarea');
-    
-    formInputs.forEach(input => {
-        input.addEventListener('focus', () => {
-            if (!formStartTracked) {
-                if (ga4Tracker) ga4Tracker.trackContactFormStart();
-                formStartTracked = true;
-            }
-        });
-    });
-
-    form.addEventListener('submit', handleContactSubmission);
-}
-
-async function handleContactSubmission(event) {
-    event.preventDefault();
-    
-    const form = event.target;
-    const submitBtn = form.querySelector('button[type="submit"]');
-    const feedback = document.getElementById('contact-feedback');
-    const feedbackContent = document.getElementById('feedback-content');
-    
-    // Collect form data
-    const formData = {
-        name: form.name.value.trim(),
-        email: form.email.value.trim(),
-        phone: form.phone ? form.phone.value.trim() : '',
-        message: form.message.value.trim(),
-        timestamp: new Date().toISOString()
-    };
-    
-    // Basic validation
-    if (!formData.name || !formData.email || !formData.message) {
-        showContactError('Please fill in all required fields.');
-        return;
+    // Initialize the enhanced contact form handler
+    if (typeof ga4Tracker !== 'undefined') {
+        window.contactFormHandler = new ContactFormHandler(ga4Tracker);
+    } else {
+        console.warn('GA4 tracker not available, form will work without tracking');
+        window.contactFormHandler = new ContactFormHandler(null);
     }
-    
-    if (!isValidEmail(formData.email)) {
-        showContactError('Please enter a valid email address.');
-        return;
-    }
-    
-    // Update UI
-    if (submitBtn) {
-        submitBtn.disabled = true;
-        submitBtn.textContent = 'Submitting...';
-    }
-    
-    try {
-        // Track successful submission
-        if (ga4Tracker) {
-            ga4Tracker.trackContactFormSubmission(formData);
-        }
-        
-        // Show success message
-        if (feedback && feedbackContent) {
-            feedback.className = 'contact__feedback success';
-            feedbackContent.innerHTML = `
-                <strong>Thank you, ${formData.name}!</strong><br>
-                We've received your inquiry and will contact you within 24 hours at ${formData.email}.
-            `;
-            feedback.style.display = 'block';
-        }
-        
-        // Reset form
-        form.reset();
-        
-        // Store lead data locally for future reference
-        storeLeadData(formData);
-        
-    } catch (error) {
-        console.error('Contact submission error:', error);
-        showContactError('Thank you for your interest! We have received your message.');
-    }
-    
-    // Reset button
-    if (submitBtn) {
-        submitBtn.disabled = false;
-        submitBtn.textContent = 'Send Message';
-    }
-    
-    // Hide feedback after 8 seconds
-    setTimeout(() => {
-        if (feedback) feedback.style.display = 'none';
-    }, 8000);
-}
-
-function showContactError(message) {
-    const feedback = document.getElementById('contact-feedback');
-    const feedbackContent = document.getElementById('feedback-content');
-    
-    if (feedback && feedbackContent) {
-        feedback.className = 'contact__feedback error';
-        feedbackContent.innerHTML = message;
-        feedback.style.display = 'block';
-    }
-}
-
-function isValidEmail(email) {
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    return emailRegex.test(email);
-}
-
-function storeLeadData(formData) {
-    const leads = JSON.parse(localStorage.getItem('kud_leads') || '[]');
-    leads.push({
-        ...formData,
-        id: Date.now(),
-        source: 'website_contact_form'
-    });
-    localStorage.setItem('kud_leads', JSON.stringify(leads));
 }
 
 // =================
@@ -917,7 +1203,7 @@ function trackProgramInterest(programName) {
 }
 
 // =================
-// CAROUSEL SYSTEM (keeping your original system)
+// CAROUSEL SYSTEM
 // =================
 function makeCarousel({ containerSelector, prevSelector, nextSelector, cardGap = 16, autoPlay = false, autoPlayInterval = 5000, cardWidth = null, visibleCards = null }) {
     const container = document.querySelector(containerSelector);
@@ -1235,6 +1521,17 @@ function debounce(func, wait) {
     };
 }
 
+// Debug function to view stored form data
+function viewStoredFormData() {
+    const submissions = JSON.parse(localStorage.getItem('kud_form_submissions') || '[]');
+    const leads = JSON.parse(localStorage.getItem('kud_leads') || '[]');
+    
+    console.log('Form Submissions:', submissions);
+    console.log('Leads Data:', leads);
+    
+    return { submissions, leads };
+}
+
 // Handle window resize
 window.addEventListener('resize', debounce(() => {
     console.log('Window resized, carousels updating...');
@@ -1259,5 +1556,6 @@ window.nextQuestion = nextQuestion;
 window.previousQuestion = previousQuestion;
 window.trackProgramInterest = trackProgramInterest;
 window.selectAnswer = selectAnswer;
+window.viewStoredFormData = viewStoredFormData;
 
-console.log('MBA Website JavaScript with GA4 tracking loaded successfully');
+console.log('MBA Website JavaScript with GA4 tracking and enhanced form handler loaded successfully');
