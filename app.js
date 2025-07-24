@@ -5,7 +5,7 @@ const GA4_CONFIG = {
     debug: false // Set to true for development
 };
 
-// Application data
+// Application data (keeping your original data structure)
 const appData = {
     programs: [
         {
@@ -90,10 +90,10 @@ const appData = {
         }
     ],
     recruiters: [
-        "Infosys", "TCS", "HDFC Bank", "ICICI Bank", "Amazon", "Deloitte", 
-        "Wipro", "Accenture", "IBM", "Microsoft", "Google", "Cognizant", 
-        "HCL Technologies", "Tech Mahindra", "Bajaj Finserv", "Reliance Industries", 
-        "Aditya Birla Group", "ITC Limited", "Godrej Group", "Mahindra Group", 
+        "Infosys", "TCS", "HDFC Bank", "ICICI Bank", "Amazon", "Deloitte",
+        "Wipro", "Accenture", "IBM", "Microsoft", "Google", "Cognizant",
+        "HCL Technologies", "Tech Mahindra", "Bajaj Finserv", "Reliance Industries",
+        "Aditya Birla Group", "ITC Limited", "Godrej Group", "Mahindra Group",
         "L&T Infotech", "Mindtree", "Mphasis"
     ]
 };
@@ -157,8 +157,8 @@ const quizQuestions = [
     }
 ];
 
-// Poll options with local storage
-let pollOptions = [
+// Poll options - reset on each page load
+const pollOptions = [
     { id: 'career-growth', label: 'Career Growth', votes: 45 },
     { id: 'salary-increase', label: 'Salary Increase', votes: 32 },
     { id: 'industry-network', label: 'Industry Network', votes: 28 },
@@ -228,29 +228,33 @@ class GA4Tracker {
 
     // Quiz tracking methods
     trackQuizStart() {
-        gtag('event', 'quiz_start', {
-            event_category: 'engagement',
-            event_label: 'mba_specialization_quiz',
-            session_id: this.sessionId,
-            user_id: this.userId,
-            timestamp: new Date().toISOString()
-        });
+        if (typeof gtag !== 'undefined') {
+            gtag('event', 'quiz_start', {
+                event_category: 'engagement',
+                event_label: 'mba_specialization_quiz',
+                session_id: this.sessionId,
+                user_id: this.userId,
+                timestamp: new Date().toISOString()
+            });
+        }
 
         if (this.debug) console.log('Quiz started tracked');
     }
 
     trackQuizQuestion(questionIndex, question, selectedAnswer, stream) {
-        gtag('event', 'quiz_question_answered', {
-            event_category: 'engagement',
-            event_label: 'mba_quiz',
-            question_number: questionIndex + 1,
-            question_text: question,
-            selected_answer: selectedAnswer,
-            recommended_stream: stream,
-            session_id: this.sessionId,
-            user_id: this.userId,
-            timestamp: new Date().toISOString()
-        });
+        if (typeof gtag !== 'undefined') {
+            gtag('event', 'quiz_question_answered', {
+                event_category: 'engagement',
+                event_label: 'mba_quiz',
+                question_number: questionIndex + 1,
+                question_text: question,
+                selected_answer: selectedAnswer,
+                recommended_stream: stream,
+                session_id: this.sessionId,
+                user_id: this.userId,
+                timestamp: new Date().toISOString()
+            });
+        }
 
         if (this.debug) {
             console.log('Quiz question tracked:', { questionIndex, selectedAnswer, stream });
@@ -258,59 +262,47 @@ class GA4Tracker {
     }
 
     trackQuizCompletion(finalStream, allAnswers, timeTaken) {
-        gtag('event', 'quiz_completed', {
-            event_category: 'conversion',
-            event_label: 'mba_quiz_completion',
-            recommended_stream: finalStream,
-            questions_answered: allAnswers.length,
-            time_taken_seconds: timeTaken,
-            session_id: this.sessionId,
-            user_id: this.userId,
-            timestamp: new Date().toISOString()
-        });
-
-        // Track each answer as custom parameters
-        allAnswers.forEach((answer, index) => {
-            gtag('event', 'quiz_answer_summary', {
-                event_category: 'engagement',
-                question_number: index + 1,
-                selected_stream: answer.stream,
-                answer_text: answer.text,
-                user_id: this.userId
+        if (typeof gtag !== 'undefined') {
+            gtag('event', 'quiz_completed', {
+                event_category: 'conversion',
+                event_label: 'mba_quiz_completion',
+                recommended_stream: finalStream,
+                questions_answered: allAnswers.length,
+                time_taken_seconds: timeTaken,
+                session_id: this.sessionId,
+                user_id: this.userId,
+                timestamp: new Date().toISOString()
             });
-        });
+
+            // Track each answer as custom parameters
+            allAnswers.forEach((answer, index) => {
+                gtag('event', 'quiz_answer_summary', {
+                    event_category: 'engagement',
+                    question_number: index + 1,
+                    selected_stream: answer.stream,
+                    answer_text: answer.text,
+                    user_id: this.userId
+                });
+            });
+        }
 
         if (this.debug) {
             console.log('Quiz completion tracked:', { finalStream, timeTaken });
         }
     }
 
-    trackQuizAbandonment(questionIndex, timeTaken) {
-        gtag('event', 'quiz_abandoned', {
-            event_category: 'engagement',
-            event_label: 'mba_quiz_abandoned',
-            last_question: questionIndex + 1,
-            time_spent_seconds: timeTaken,
-            session_id: this.sessionId,
-            user_id: this.userId,
-            timestamp: new Date().toISOString()
-        });
-
-        if (this.debug) {
-            console.log('Quiz abandonment tracked:', { questionIndex, timeTaken });
-        }
-    }
-
     // Poll tracking methods
     trackPollVote(option) {
-        gtag('event', 'poll_vote', {
-            event_category: 'engagement',
-            event_label: 'mba_motivation_poll',
-            selected_option: option,
-            session_id: this.sessionId,
-            user_id: this.userId,
-            timestamp: new Date().toISOString()
-        });
+        if (typeof gtag !== 'undefined') {
+            gtag('event', 'poll_vote', {
+                event_category: 'engagement',
+                event_label: 'mba_motivation_poll',
+                selected_option: option,
+                session_id: this.sessionId,
+                user_id: this.userId,
+                timestamp: new Date().toISOString()
+            });
+        }
 
         if (this.debug) {
             console.log('Poll vote tracked:', option);
@@ -319,81 +311,63 @@ class GA4Tracker {
 
     // Contact form tracking methods
     trackContactFormStart() {
-        gtag('event', 'form_start', {
-            event_category: 'engagement',
-            event_label: 'contact_form',
-            form_name: 'mba_contact_form',
-            session_id: this.sessionId,
-            user_id: this.userId,
-            timestamp: new Date().toISOString()
-        });
+        if (typeof gtag !== 'undefined') {
+            gtag('event', 'form_start', {
+                event_category: 'engagement',
+                event_label: 'contact_form',
+                form_name: 'mba_contact_form',
+                session_id: this.sessionId,
+                user_id: this.userId,
+                timestamp: new Date().toISOString()
+            });
+        }
 
         if (this.debug) console.log('Contact form start tracked');
     }
 
     trackContactFormSubmission(formData) {
-        gtag('event', 'form_submit', {
-            event_category: 'conversion',
-            event_label: 'contact_form_submission',
-            form_name: 'mba_contact_form',
-            user_name: formData.name,
-            user_email: formData.email,
-            message_length: formData.message.length,
-            session_id: this.sessionId,
-            user_id: this.userId,
-            timestamp: new Date().toISOString()
-        });
+        if (typeof gtag !== 'undefined') {
+            gtag('event', 'form_submit', {
+                event_category: 'conversion',
+                event_label: 'contact_form_submission',
+                form_name: 'mba_contact_form',
+                user_name: formData.name,
+                user_email: formData.email,
+                message_length: formData.message.length,
+                session_id: this.sessionId,
+                user_id: this.userId,
+                timestamp: new Date().toISOString()
+            });
 
-        // Mark as conversion
-        gtag('event', 'generate_lead', {
-            event_category: 'conversion',
-            value: 1,
-            currency: 'USD'
-        });
+            // Mark as conversion
+            gtag('event', 'generate_lead', {
+                event_category: 'conversion',
+                value: 1,
+                currency: 'USD'
+            });
+        }
 
         if (this.debug) {
             console.log('Contact form submission tracked:', formData.name);
         }
     }
 
-    trackContactFormError(error) {
-        gtag('event', 'form_error', {
-            event_category: 'error',
-            event_label: 'contact_form_error',
-            error_message: error,
-            session_id: this.sessionId,
-            user_id: this.userId,
-            timestamp: new Date().toISOString()
-        });
-
-        if (this.debug) console.log('Contact form error tracked:', error);
-    }
-
     // Page interaction tracking
     trackProgramInterest(programName) {
-        gtag('event', 'program_interest', {
-            event_category: 'engagement',
-            event_label: 'program_click',
-            program_name: programName,
-            session_id: this.sessionId,
-            user_id: this.userId,
-            timestamp: new Date().toISOString()
-        });
+        if (typeof gtag !== 'undefined') {
+            gtag('event', 'program_interest', {
+                event_category: 'engagement',
+                event_label: 'program_click',
+                program_name: programName,
+                session_id: this.sessionId,
+                user_id: this.userId,
+                timestamp: new Date().toISOString()
+            });
+        }
 
         if (this.debug) {
             console.log('Program interest tracked:', programName);
         }
-    }
-
-    trackPageSection(sectionName) {
-        gtag('event', 'section_view', {
-            event_category: 'engagement',
-            event_label: 'section_scroll',
-            section_name: sectionName,
-            session_id: this.sessionId,
-            user_id: this.userId,
-            timestamp: new Date().toISOString()
-        });
     }
 }
 
@@ -424,30 +398,39 @@ function initializeApp() {
     // Initialize carousels
     initializeAllCarousels();
     
-    // Initialize animations and scroll tracking
+    // Initialize animations
     initializeAnimations();
-    initializeScrollTracking();
-    
-    // Load poll data from localStorage
-    loadPollDataFromStorage();
 }
 
-// ================= 
-// QUIZ FUNCTIONALITY WITH GA4 TRACKING
+// =================
+// QUIZ FUNCTIONALITY - FIXED
 // =================
 function initializeQuiz() {
-    const quizContainer = document.getElementById('quiz-container');
-    if (!quizContainer) return;
-
+    console.log('Initializing quiz...');
+    
     // Reset quiz state
     currentQuiz = {
         currentQuestion: 0,
         answers: [],
         isCompleted: false,
         startTime: Date.now(),
-        userId: ga4Tracker.userId
+        userId: ga4Tracker ? ga4Tracker.userId : 'anonymous'
     };
 
+    // Check if quiz container exists
+    const quizContainer = document.getElementById('quiz-container');
+    if (!quizContainer) {
+        console.warn('Quiz container not found');
+        return;
+    }
+
+    // Clear any loading message
+    const loadingMessage = quizContainer.querySelector('.loading');
+    if (loadingMessage) {
+        loadingMessage.style.display = 'none';
+    }
+
+    // Render first question immediately
     renderQuizQuestion();
 }
 
@@ -455,12 +438,19 @@ function renderQuizQuestion() {
     const quizContent = document.getElementById('quiz-content');
     const quizResult = document.getElementById('quiz-result');
     
-    if (!quizContent) return;
-
-    if (currentQuiz.currentQuestion === 0 && currentQuiz.answers.length === 0) {
-        ga4Tracker.trackQuizStart();
+    if (!quizContent) {
+        console.error('Quiz content element not found');
+        return;
     }
 
+    console.log('Rendering question:', currentQuiz.currentQuestion);
+
+    // Track quiz start on first question
+    if (currentQuiz.currentQuestion === 0 && currentQuiz.answers.length === 0) {
+        if (ga4Tracker) ga4Tracker.trackQuizStart();
+    }
+
+    // Check if quiz is completed
     if (currentQuiz.currentQuestion >= quizQuestions.length) {
         showQuizResult();
         return;
@@ -497,16 +487,20 @@ function renderQuizQuestion() {
 }
 
 function selectAnswer(answerIndex) {
+    console.log('Answer selected:', answerIndex);
+    
     const question = quizQuestions[currentQuiz.currentQuestion];
     const selectedAnswer = question.answers[answerIndex];
     
     // Track the answer
-    ga4Tracker.trackQuizQuestion(
-        currentQuiz.currentQuestion,
-        question.question,
-        selectedAnswer.text,
-        selectedAnswer.stream
-    );
+    if (ga4Tracker) {
+        ga4Tracker.trackQuizQuestion(
+            currentQuiz.currentQuestion,
+            question.question,
+            selectedAnswer.text,
+            selectedAnswer.stream
+        );
+    }
     
     // Store the answer
     currentQuiz.answers[currentQuiz.currentQuestion] = selectedAnswer;
@@ -516,7 +510,7 @@ function selectAnswer(answerIndex) {
     buttons.forEach((btn, index) => {
         if (index === answerIndex) {
             btn.classList.add('selected');
-            btn.style.backgroundColor = 'var(--color-primary)';
+            btn.style.backgroundColor = '#1a365d';
             btn.style.color = 'white';
         } else {
             btn.classList.remove('selected');
@@ -561,7 +555,9 @@ function showQuizResult() {
     );
     
     // Track quiz completion
-    ga4Tracker.trackQuizCompletion(recommendedStream, currentQuiz.answers, timeTaken);
+    if (ga4Tracker) {
+        ga4Tracker.trackQuizCompletion(recommendedStream, currentQuiz.answers, timeTaken);
+    }
     
     const program = appData.programs.find(p => p.name === recommendedStream);
     
@@ -611,12 +607,14 @@ function showQuizResult() {
 }
 
 function restartQuiz() {
+    console.log('Restarting quiz...');
+    
     currentQuiz = {
         currentQuestion: 0,
         answers: [],
         isCompleted: false,
         startTime: Date.now(),
-        userId: ga4Tracker.userId
+        userId: ga4Tracker ? ga4Tracker.userId : 'anonymous'
     };
     
     const quizContent = document.getElementById('quiz-content');
@@ -628,28 +626,40 @@ function restartQuiz() {
     renderQuizQuestion();
 }
 
-// Track quiz abandonment when user leaves page
-window.addEventListener('beforeunload', function() {
-    if (!currentQuiz.isCompleted && currentQuiz.answers.length > 0) {
-        const timeTaken = Math.round((Date.now() - currentQuiz.startTime) / 1000);
-        ga4Tracker.trackQuizAbandonment(currentQuiz.currentQuestion, timeTaken);
-    }
-});
-
 // =================
-// POLL FUNCTIONALITY WITH GA4 TRACKING
+// POLL FUNCTIONALITY - FIXED RESET ISSUE
 // =================
 function initializePoll() {
-    const pollOptionsContainer = document.getElementById('poll-options');
-    if (!pollOptionsContainer) return;
-
-    // Check if user has already voted
-    pollState.hasVoted = localStorage.getItem('kud_poll_voted') === 'true';
+    console.log('Initializing poll...');
     
-    if (pollState.hasVoted) {
-        showPollResults();
+    const pollOptionsContainer = document.getElementById('poll-options');
+    if (!pollOptionsContainer) {
+        console.warn('Poll options container not found');
         return;
     }
+
+    // Reset poll state on each page load (no persistence)
+    pollState = {
+        hasVoted: false,
+        results: [...pollOptions] // Fresh copy of original data
+    };
+
+    // Clear any existing vote state
+    localStorage.removeItem('kud_poll_voted');
+    
+    renderPollOptions();
+}
+
+function renderPollOptions() {
+    const pollOptionsContainer = document.getElementById('poll-options');
+    const pollQuestion = document.getElementById('poll-question');
+    const pollResults = document.getElementById('poll-results');
+    
+    if (!pollOptionsContainer) return;
+
+    // Show question, hide results
+    if (pollQuestion) pollQuestion.style.display = 'block';
+    if (pollResults) pollResults.style.display = 'none';
 
     // Render poll options
     pollOptionsContainer.innerHTML = pollOptions.map(option => `
@@ -672,14 +682,18 @@ function initializePoll() {
 function handlePollVote(option) {
     if (pollState.hasVoted) return;
 
+    console.log('Poll vote:', option);
+
     // Track the vote
-    ga4Tracker.trackPollVote(option);
+    if (ga4Tracker) {
+        ga4Tracker.trackPollVote(option);
+    }
     
     // Visual feedback
     document.querySelectorAll('.poll__option').forEach(btn => {
         btn.disabled = true;
         if (btn.dataset.option === option) {
-            btn.style.background = 'var(--color-primary)';
+            btn.style.background = '#1a365d';
             btn.style.color = 'white';
         }
     });
@@ -691,10 +705,6 @@ function handlePollVote(option) {
     }
 
     pollState.hasVoted = true;
-    localStorage.setItem('kud_poll_voted', 'true');
-    
-    // Save updated poll data
-    savePollDataToStorage();
     
     // Show results after delay
     setTimeout(() => {
@@ -738,21 +748,6 @@ function showPollResults() {
     }
 }
 
-function loadPollDataFromStorage() {
-    const savedPoll = localStorage.getItem('kud_poll_data');
-    if (savedPoll) {
-        try {
-            pollState.results = JSON.parse(savedPoll);
-        } catch (e) {
-            console.log('Using default poll data');
-        }
-    }
-}
-
-function savePollDataToStorage() {
-    localStorage.setItem('kud_poll_data', JSON.stringify(pollState.results));
-}
-
 // =================
 // CONTACT FORM WITH GA4 TRACKING
 // =================
@@ -767,7 +762,7 @@ function initializeContactForm() {
     formInputs.forEach(input => {
         input.addEventListener('focus', () => {
             if (!formStartTracked) {
-                ga4Tracker.trackContactFormStart();
+                if (ga4Tracker) ga4Tracker.trackContactFormStart();
                 formStartTracked = true;
             }
         });
@@ -795,13 +790,11 @@ async function handleContactSubmission(event) {
     
     // Basic validation
     if (!formData.name || !formData.email || !formData.message) {
-        ga4Tracker.trackContactFormError('Missing required fields');
         showContactError('Please fill in all required fields.');
         return;
     }
     
     if (!isValidEmail(formData.email)) {
-        ga4Tracker.trackContactFormError('Invalid email format');
         showContactError('Please enter a valid email address.');
         return;
     }
@@ -814,7 +807,9 @@ async function handleContactSubmission(event) {
     
     try {
         // Track successful submission
-        ga4Tracker.trackContactFormSubmission(formData);
+        if (ga4Tracker) {
+            ga4Tracker.trackContactFormSubmission(formData);
+        }
         
         // Show success message
         if (feedback && feedbackContent) {
@@ -833,7 +828,7 @@ async function handleContactSubmission(event) {
         storeLeadData(formData);
         
     } catch (error) {
-        ga4Tracker.trackContactFormError(error.message);
+        console.error('Contact submission error:', error);
         showContactError('Thank you for your interest! We have received your message.');
     }
     
@@ -911,7 +906,9 @@ function renderPrograms() {
 }
 
 function trackProgramInterest(programName) {
-    ga4Tracker.trackProgramInterest(programName);
+    if (ga4Tracker) {
+        ga4Tracker.trackProgramInterest(programName);
+    }
     
     // Scroll to contact section
     setTimeout(() => {
@@ -920,33 +917,7 @@ function trackProgramInterest(programName) {
 }
 
 // =================
-// SCROLL TRACKING
-// =================
-function initializeScrollTracking() {
-    const sections = document.querySelectorAll('section[id]');
-    const sectionTracker = new Set();
-    
-    const observer = new IntersectionObserver((entries) => {
-        entries.forEach(entry => {
-            if (entry.isIntersecting && entry.intersectionRatio > 0.5) {
-                const sectionId = entry.target.id;
-                if (!sectionTracker.has(sectionId)) {
-                    ga4Tracker.trackPageSection(sectionId);
-                    sectionTracker.add(sectionId);
-                }
-            }
-        });
-    }, {
-        threshold: 0.5
-    });
-    
-    sections.forEach(section => {
-        observer.observe(section);
-    });
-}
-
-// =================
-// CAROUSEL SYSTEM (Unchanged)
+// CAROUSEL SYSTEM (keeping your original system)
 // =================
 function makeCarousel({ containerSelector, prevSelector, nextSelector, cardGap = 16, autoPlay = false, autoPlayInterval = 5000, cardWidth = null, visibleCards = null }) {
     const container = document.querySelector(containerSelector);
@@ -1029,37 +1000,6 @@ function makeCarousel({ containerSelector, prevSelector, nextSelector, cardGap =
         });
     }
     
-    // Touch support
-    let startX = 0;
-    let currentX = 0;
-    let isDragging = false;
-    
-    container.addEventListener('touchstart', (e) => {
-        startX = e.touches[0].clientX;
-        isDragging = true;
-        if (autoPlay) stopAutoPlay();
-    }, { passive: true });
-    
-    container.addEventListener('touchmove', (e) => {
-        if (!isDragging) return;
-        currentX = e.touches[0].clientX;
-    }, { passive: true });
-    
-    container.addEventListener('touchend', () => {
-        if (!isDragging) return;
-        isDragging = false;
-        
-        const diffX = startX - currentX;
-        if (Math.abs(diffX) > 50) {
-            if (diffX > 0) {
-                nextSlide();
-            } else {
-                prevSlide();
-            }
-        }
-        if (autoPlay) restartAutoPlay();
-    });
-    
     // Auto-play functionality
     const startAutoPlay = () => {
         if (!autoPlay) return;
@@ -1097,10 +1037,6 @@ function makeCarousel({ containerSelector, prevSelector, nextSelector, cardGap =
     return {
         nextSlide,
         prevSlide,
-        goToSlide: (slideIndex) => {
-            index = slideIndex;
-            updateCarousel();
-        },
         destroy: () => {
             stopAutoPlay();
             window.removeEventListener('resize', handleResize);
@@ -1132,7 +1068,7 @@ function initializeAllCarousels() {
         cardWidth: 296
     });
     
-    // Campus Carousel
+    // Campus Carousel (if exists)
     const campusCarousel = makeCarousel({
         containerSelector: '.campus-container',
         prevSelector: '#campusPrev',
@@ -1307,7 +1243,7 @@ window.addEventListener('resize', debounce(() => {
 // Global error handler
 window.addEventListener('error', (event) => {
     console.error('JavaScript Error:', event.error);
-    if (ga4Tracker) {
+    if (ga4Tracker && typeof gtag !== 'undefined') {
         gtag('event', 'javascript_error', {
             event_category: 'error',
             error_message: event.error.message,
@@ -1322,5 +1258,6 @@ window.restartQuiz = restartQuiz;
 window.nextQuestion = nextQuestion;
 window.previousQuestion = previousQuestion;
 window.trackProgramInterest = trackProgramInterest;
+window.selectAnswer = selectAnswer;
 
 console.log('MBA Website JavaScript with GA4 tracking loaded successfully');
