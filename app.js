@@ -1,8 +1,9 @@
-// MBA Website JavaScript - Complete Fixed Version
-// Google Sheets API endpoint (replace with actual deployment URL)
-const API_URL = 'https://script.google.com/macros/s/AKfycbyZRrcN1LJpyfb2AwXeY_xGbo4goqXVqNdplfFoE-by9pxnTsenOL7JAQiH_pzBpt5KrQ/exec';
-
-
+// MBA Website JavaScript - GA4 Tracking Version
+// Google Analytics 4 Configuration
+const GA4_CONFIG = {
+    measurementId: 'G-9FVVBS9GQV', // Replace with your GA4 Measurement ID
+    debug: false // Set to true for development
+};
 
 // Application data
 const appData = {
@@ -15,14 +16,14 @@ const appData = {
         },
         {
             name: "Finance",
-            description: "Excel in financial markets and investment strategies", 
+            description: "Excel in financial markets and investment strategies",
             courses: "Financial Markets & Services, Cost & Management Accounting, Derivatives & Risk Management, International Finance, Mergers & Acquisitions, Tax Planning, Investment Analysis & Portfolio Management, Banking, Microfinance",
             career_paths: ["Financial Analyst", "Investment Banker", "CFO"]
         },
         {
             name: "Human Resources (HR)",
             description: "Lead talent management and organizational development",
-            courses: "Labour Laws, Talent Management, Compensation, Emotional Intelligence, International HRM, Organisational Development, Performance Management, Learning & Development, HR Info Systems", 
+            courses: "Labour Laws, Talent Management, Compensation, Emotional Intelligence, International HRM, Organisational Development, Performance Management, Learning & Development, HR Info Systems",
             career_paths: ["HR Manager", "Talent Acquisition Specialist", "CHRO"]
         },
         {
@@ -32,7 +33,7 @@ const appData = {
             career_paths: ["Operations Manager", "Supply Chain Analyst", "COO"]
         },
         {
-            name: "Business Analytics / Information Systems", 
+            name: "Business Analytics / Information Systems",
             description: "Harness data for strategic business decisions",
             courses: "MIS, Business Research & Analytics, IT for Managers, Data-Driven Decision-Making, ERP systems",
             career_paths: ["Business Analyst", "Data Scientist", "IT Manager"]
@@ -40,14 +41,14 @@ const appData = {
         {
             name: "General Management / Strategy",
             description: "Develop comprehensive leadership and strategic skills",
-            courses: "Principles of Management, Strategic Management, Legal Aspects, Entrepreneurship, Sustainability, Management Control Systems", 
+            courses: "Principles of Management, Strategic Management, Legal Aspects, Entrepreneurship, Sustainability, Management Control Systems",
             career_paths: ["General Manager", "Strategy Consultant", "CEO"]
         }
     ],
     faculty: [
         {
             name: "Dr. Ramesh Patil",
-            expertise: "Finance & Investment Strategy", 
+            expertise: "Finance & Investment Strategy",
             experience: "25+ years in Corporate Finance and Banking"
         },
         {
@@ -56,7 +57,7 @@ const appData = {
             experience: "20+ years in Brand Management and Digital Marketing"
         },
         {
-            name: "Dr. Suresh Kumar", 
+            name: "Dr. Suresh Kumar",
             expertise: "Operations & Supply Chain Management",
             experience: "18+ years in Manufacturing and Logistics"
         },
@@ -67,13 +68,13 @@ const appData = {
         },
         {
             name: "Dr. Anand Desai",
-            expertise: "Business Analytics & Information Systems", 
+            expertise: "Business Analytics & Information Systems",
             experience: "15+ years in Data Analytics and IT Management"
         }
     ],
     testimonials: [
         {
-            name: "Arun Desai", 
+            name: "Arun Desai",
             position: "Senior Manager, Infosys",
             quote: "The MBA program at KUD equipped me with strategic thinking and leadership skills that accelerated my career growth significantly."
         },
@@ -84,19 +85,20 @@ const appData = {
         },
         {
             name: "Vikram Gowda",
-            position: "Founder, TechStart Solutions", 
+            position: "Founder, TechStart Solutions",
             quote: "The entrepreneurship focus and mentorship support were instrumental in launching my successful technology startup."
         }
     ],
     recruiters: [
-        "Infosys", "TCS", "HDFC Bank", "ICICI Bank", "Amazon", "Deloitte", "Wipro", "Accenture", 
-        "IBM", "Microsoft", "Google", "Cognizant", "HCL Technologies", "Tech Mahindra", 
-        "Bajaj Finserv", "Reliance Industries", "Aditya Birla Group", "ITC Limited", 
-        "Godrej Group", "Mahindra Group", "L&T Infotech", "Mindtree", "Mphasis"
+        "Infosys", "TCS", "HDFC Bank", "ICICI Bank", "Amazon", "Deloitte", 
+        "Wipro", "Accenture", "IBM", "Microsoft", "Google", "Cognizant", 
+        "HCL Technologies", "Tech Mahindra", "Bajaj Finserv", "Reliance Industries", 
+        "Aditya Birla Group", "ITC Limited", "Godrej Group", "Mahindra Group", 
+        "L&T Infotech", "Mindtree", "Mphasis"
     ]
 };
 
-// Quiz questions with fallback data
+// Quiz questions
 const quizQuestions = [
     {
         question: "What type of work environment excites you most?",
@@ -155,7 +157,7 @@ const quizQuestions = [
     }
 ];
 
-// Poll options
+// Poll options with local storage
 let pollOptions = [
     { id: 'career-growth', label: 'Career Growth', votes: 45 },
     { id: 'salary-increase', label: 'Salary Increase', votes: 32 },
@@ -164,18 +166,239 @@ let pollOptions = [
     { id: 'entrepreneurship', label: 'Entrepreneurship', votes: 23 }
 ];
 
-// Quiz state
+// Application state
 let currentQuiz = {
     currentQuestion: 0,
     answers: [],
-    isCompleted: false
+    isCompleted: false,
+    startTime: null,
+    userId: null
 };
 
-// Poll state
 let pollState = {
     hasVoted: false,
     results: [...pollOptions]
 };
+
+// Google Analytics 4 Tracking Class
+class GA4Tracker {
+    constructor(measurementId, debug = false) {
+        this.measurementId = measurementId;
+        this.debug = debug;
+        this.sessionId = this.generateSessionId();
+        this.userId = this.getUserId();
+        this.initializeGA4();
+    }
+
+    initializeGA4() {
+        // Load GA4 script
+        const script = document.createElement('script');
+        script.async = true;
+        script.src = `https://www.googletagmanager.com/gtag/js?id=${this.measurementId}`;
+        document.head.appendChild(script);
+
+        // Initialize gtag
+        window.dataLayer = window.dataLayer || [];
+        window.gtag = function() { dataLayer.push(arguments); };
+        
+        gtag('js', new Date());
+        gtag('config', this.measurementId, {
+            debug_mode: this.debug,
+            session_id: this.sessionId,
+            user_id: this.userId
+        });
+
+        if (this.debug) {
+            console.log('GA4 initialized with ID:', this.measurementId);
+        }
+    }
+
+    generateSessionId() {
+        return Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+    }
+
+    getUserId() {
+        let userId = localStorage.getItem('kud_user_id');
+        if (!userId) {
+            userId = 'user_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('kud_user_id', userId);
+        }
+        return userId;
+    }
+
+    // Quiz tracking methods
+    trackQuizStart() {
+        gtag('event', 'quiz_start', {
+            event_category: 'engagement',
+            event_label: 'mba_specialization_quiz',
+            session_id: this.sessionId,
+            user_id: this.userId,
+            timestamp: new Date().toISOString()
+        });
+
+        if (this.debug) console.log('Quiz started tracked');
+    }
+
+    trackQuizQuestion(questionIndex, question, selectedAnswer, stream) {
+        gtag('event', 'quiz_question_answered', {
+            event_category: 'engagement',
+            event_label: 'mba_quiz',
+            question_number: questionIndex + 1,
+            question_text: question,
+            selected_answer: selectedAnswer,
+            recommended_stream: stream,
+            session_id: this.sessionId,
+            user_id: this.userId,
+            timestamp: new Date().toISOString()
+        });
+
+        if (this.debug) {
+            console.log('Quiz question tracked:', { questionIndex, selectedAnswer, stream });
+        }
+    }
+
+    trackQuizCompletion(finalStream, allAnswers, timeTaken) {
+        gtag('event', 'quiz_completed', {
+            event_category: 'conversion',
+            event_label: 'mba_quiz_completion',
+            recommended_stream: finalStream,
+            questions_answered: allAnswers.length,
+            time_taken_seconds: timeTaken,
+            session_id: this.sessionId,
+            user_id: this.userId,
+            timestamp: new Date().toISOString()
+        });
+
+        // Track each answer as custom parameters
+        allAnswers.forEach((answer, index) => {
+            gtag('event', 'quiz_answer_summary', {
+                event_category: 'engagement',
+                question_number: index + 1,
+                selected_stream: answer.stream,
+                answer_text: answer.text,
+                user_id: this.userId
+            });
+        });
+
+        if (this.debug) {
+            console.log('Quiz completion tracked:', { finalStream, timeTaken });
+        }
+    }
+
+    trackQuizAbandonment(questionIndex, timeTaken) {
+        gtag('event', 'quiz_abandoned', {
+            event_category: 'engagement',
+            event_label: 'mba_quiz_abandoned',
+            last_question: questionIndex + 1,
+            time_spent_seconds: timeTaken,
+            session_id: this.sessionId,
+            user_id: this.userId,
+            timestamp: new Date().toISOString()
+        });
+
+        if (this.debug) {
+            console.log('Quiz abandonment tracked:', { questionIndex, timeTaken });
+        }
+    }
+
+    // Poll tracking methods
+    trackPollVote(option) {
+        gtag('event', 'poll_vote', {
+            event_category: 'engagement',
+            event_label: 'mba_motivation_poll',
+            selected_option: option,
+            session_id: this.sessionId,
+            user_id: this.userId,
+            timestamp: new Date().toISOString()
+        });
+
+        if (this.debug) {
+            console.log('Poll vote tracked:', option);
+        }
+    }
+
+    // Contact form tracking methods
+    trackContactFormStart() {
+        gtag('event', 'form_start', {
+            event_category: 'engagement',
+            event_label: 'contact_form',
+            form_name: 'mba_contact_form',
+            session_id: this.sessionId,
+            user_id: this.userId,
+            timestamp: new Date().toISOString()
+        });
+
+        if (this.debug) console.log('Contact form start tracked');
+    }
+
+    trackContactFormSubmission(formData) {
+        gtag('event', 'form_submit', {
+            event_category: 'conversion',
+            event_label: 'contact_form_submission',
+            form_name: 'mba_contact_form',
+            user_name: formData.name,
+            user_email: formData.email,
+            message_length: formData.message.length,
+            session_id: this.sessionId,
+            user_id: this.userId,
+            timestamp: new Date().toISOString()
+        });
+
+        // Mark as conversion
+        gtag('event', 'generate_lead', {
+            event_category: 'conversion',
+            value: 1,
+            currency: 'USD'
+        });
+
+        if (this.debug) {
+            console.log('Contact form submission tracked:', formData.name);
+        }
+    }
+
+    trackContactFormError(error) {
+        gtag('event', 'form_error', {
+            event_category: 'error',
+            event_label: 'contact_form_error',
+            error_message: error,
+            session_id: this.sessionId,
+            user_id: this.userId,
+            timestamp: new Date().toISOString()
+        });
+
+        if (this.debug) console.log('Contact form error tracked:', error);
+    }
+
+    // Page interaction tracking
+    trackProgramInterest(programName) {
+        gtag('event', 'program_interest', {
+            event_category: 'engagement',
+            event_label: 'program_click',
+            program_name: programName,
+            session_id: this.sessionId,
+            user_id: this.userId,
+            timestamp: new Date().toISOString()
+        });
+
+        if (this.debug) {
+            console.log('Program interest tracked:', programName);
+        }
+    }
+
+    trackPageSection(sectionName) {
+        gtag('event', 'section_view', {
+            event_category: 'engagement',
+            event_label: 'section_scroll',
+            section_name: sectionName,
+            session_id: this.sessionId,
+            user_id: this.userId,
+            timestamp: new Date().toISOString()
+        });
+    }
+}
+
+// Initialize GA4 tracker
+let ga4Tracker;
 
 // DOM Content Loaded
 document.addEventListener('DOMContentLoaded', function() {
@@ -183,6 +406,9 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 function initializeApp() {
+    // Initialize GA4 tracking
+    ga4Tracker = new GA4Tracker(GA4_CONFIG.measurementId, GA4_CONFIG.debug);
+    
     // Initialize navigation
     initializeNavigation();
     
@@ -195,30 +421,534 @@ function initializeApp() {
     renderRecruiters();
     initializeContactForm();
     
-    // Initialize ALL carousels with unified system
+    // Initialize carousels
     initializeAllCarousels();
     
-    // Load poll data
-    loadPollData();
-    
-    // Initialize animations
+    // Initialize animations and scroll tracking
     initializeAnimations();
+    initializeScrollTracking();
+    
+    // Load poll data from localStorage
+    loadPollDataFromStorage();
+}
+
+// ================= 
+// QUIZ FUNCTIONALITY WITH GA4 TRACKING
+// =================
+function initializeQuiz() {
+    const quizContainer = document.getElementById('quiz-container');
+    if (!quizContainer) return;
+
+    // Reset quiz state
+    currentQuiz = {
+        currentQuestion: 0,
+        answers: [],
+        isCompleted: false,
+        startTime: Date.now(),
+        userId: ga4Tracker.userId
+    };
+
+    renderQuizQuestion();
+}
+
+function renderQuizQuestion() {
+    const quizContent = document.getElementById('quiz-content');
+    const quizResult = document.getElementById('quiz-result');
+    
+    if (!quizContent) return;
+
+    if (currentQuiz.currentQuestion === 0 && currentQuiz.answers.length === 0) {
+        ga4Tracker.trackQuizStart();
+    }
+
+    if (currentQuiz.currentQuestion >= quizQuestions.length) {
+        showQuizResult();
+        return;
+    }
+
+    const question = quizQuestions[currentQuiz.currentQuestion];
+    
+    quizContent.innerHTML = `
+        <div class="quiz__progress">
+            <div class="quiz__progress-bar">
+                <div class="quiz__progress-fill" style="width: ${(currentQuiz.currentQuestion / quizQuestions.length) * 100}%"></div>
+            </div>
+            <span class="quiz__progress-text">Question ${currentQuiz.currentQuestion + 1} of ${quizQuestions.length}</span>
+        </div>
+        
+        <div class="quiz__question">
+            <h3>${question.question}</h3>
+            <div class="quiz__answers">
+                ${question.answers.map((answer, index) => `
+                    <button class="quiz__answer" onclick="selectAnswer(${index})" data-answer="${index}">
+                        ${answer.text}
+                    </button>
+                `).join('')}
+            </div>
+        </div>
+        
+        <div class="quiz__navigation">
+            ${currentQuiz.currentQuestion > 0 ? '<button class="quiz__btn quiz__btn--secondary" onclick="previousQuestion()">Previous</button>' : ''}
+        </div>
+    `;
+
+    quizContent.style.display = 'block';
+    if (quizResult) quizResult.style.display = 'none';
+}
+
+function selectAnswer(answerIndex) {
+    const question = quizQuestions[currentQuiz.currentQuestion];
+    const selectedAnswer = question.answers[answerIndex];
+    
+    // Track the answer
+    ga4Tracker.trackQuizQuestion(
+        currentQuiz.currentQuestion,
+        question.question,
+        selectedAnswer.text,
+        selectedAnswer.stream
+    );
+    
+    // Store the answer
+    currentQuiz.answers[currentQuiz.currentQuestion] = selectedAnswer;
+    
+    // Visual feedback
+    const buttons = document.querySelectorAll('.quiz__answer');
+    buttons.forEach((btn, index) => {
+        if (index === answerIndex) {
+            btn.classList.add('selected');
+            btn.style.backgroundColor = 'var(--color-primary)';
+            btn.style.color = 'white';
+        } else {
+            btn.classList.remove('selected');
+            btn.disabled = true;
+            btn.style.opacity = '0.5';
+        }
+    });
+    
+    // Auto-advance after a short delay
+    setTimeout(() => {
+        nextQuestion();
+    }, 800);
+}
+
+function nextQuestion() {
+    if (currentQuiz.currentQuestion < quizQuestions.length - 1) {
+        currentQuiz.currentQuestion++;
+        renderQuizQuestion();
+    } else {
+        showQuizResult();
+    }
+}
+
+function previousQuestion() {
+    if (currentQuiz.currentQuestion > 0) {
+        currentQuiz.currentQuestion--;
+        renderQuizQuestion();
+    }
+}
+
+function showQuizResult() {
+    const timeTaken = Math.round((Date.now() - currentQuiz.startTime) / 1000);
+    
+    // Calculate most recommended stream
+    const streamCounts = {};
+    currentQuiz.answers.forEach(answer => {
+        streamCounts[answer.stream] = (streamCounts[answer.stream] || 0) + 1;
+    });
+    
+    const recommendedStream = Object.keys(streamCounts).reduce((a, b) => 
+        streamCounts[a] > streamCounts[b] ? a : b
+    );
+    
+    // Track quiz completion
+    ga4Tracker.trackQuizCompletion(recommendedStream, currentQuiz.answers, timeTaken);
+    
+    const program = appData.programs.find(p => p.name === recommendedStream);
+    
+    const quizContent = document.getElementById('quiz-content');
+    const quizResult = document.getElementById('quiz-result');
+    
+    if (quizContent) quizContent.style.display = 'none';
+    if (quizResult) {
+        quizResult.innerHTML = `
+            <div class="quiz__result">
+                <div class="quiz__result-header">
+                    <div class="quiz__result-icon">🎯</div>
+                    <h3>Your Recommended MBA Specialization</h3>
+                </div>
+                
+                <div class="quiz__result-content">
+                    <h2 class="quiz__result-stream">${recommendedStream}</h2>
+                    <p class="quiz__result-description">${program ? program.description : ''}</p>
+                    
+                    <div class="quiz__result-details">
+                        <h4>Why this specialization?</h4>
+                        <p>Based on your responses, you show strong alignment with ${recommendedStream} roles and responsibilities.</p>
+                        
+                        ${program ? `
+                            <h4>Career Opportunities:</h4>
+                            <ul>
+                                ${program.career_paths.map(path => `<li>${path}</li>`).join('')}
+                            </ul>
+                        ` : ''}
+                    </div>
+                    
+                    <div class="quiz__result-actions">
+                        <button class="quiz__btn quiz__btn--primary" onclick="scrollToSection('contact')">
+                            Get More Information
+                        </button>
+                        <button class="quiz__btn quiz__btn--secondary" onclick="restartQuiz()">
+                            Retake Quiz
+                        </button>
+                    </div>
+                </div>
+            </div>
+        `;
+        quizResult.style.display = 'block';
+    }
+    
+    currentQuiz.isCompleted = true;
+}
+
+function restartQuiz() {
+    currentQuiz = {
+        currentQuestion: 0,
+        answers: [],
+        isCompleted: false,
+        startTime: Date.now(),
+        userId: ga4Tracker.userId
+    };
+    
+    const quizContent = document.getElementById('quiz-content');
+    const quizResult = document.getElementById('quiz-result');
+    
+    if (quizContent) quizContent.style.display = 'block';
+    if (quizResult) quizResult.style.display = 'none';
+    
+    renderQuizQuestion();
+}
+
+// Track quiz abandonment when user leaves page
+window.addEventListener('beforeunload', function() {
+    if (!currentQuiz.isCompleted && currentQuiz.answers.length > 0) {
+        const timeTaken = Math.round((Date.now() - currentQuiz.startTime) / 1000);
+        ga4Tracker.trackQuizAbandonment(currentQuiz.currentQuestion, timeTaken);
+    }
+});
+
+// =================
+// POLL FUNCTIONALITY WITH GA4 TRACKING
+// =================
+function initializePoll() {
+    const pollOptionsContainer = document.getElementById('poll-options');
+    if (!pollOptionsContainer) return;
+
+    // Check if user has already voted
+    pollState.hasVoted = localStorage.getItem('kud_poll_voted') === 'true';
+    
+    if (pollState.hasVoted) {
+        showPollResults();
+        return;
+    }
+
+    // Render poll options
+    pollOptionsContainer.innerHTML = pollOptions.map(option => `
+        <button class="poll__option" data-option="${option.id}">
+            <span class="poll__option-text">${option.label}</span>
+        </button>
+    `).join('');
+
+    // Add event listeners
+    const buttons = pollOptionsContainer.querySelectorAll('.poll__option');
+    buttons.forEach(button => {
+        button.addEventListener('click', () => {
+            if (!pollState.hasVoted) {
+                handlePollVote(button.dataset.option);
+            }
+        });
+    });
+}
+
+function handlePollVote(option) {
+    if (pollState.hasVoted) return;
+
+    // Track the vote
+    ga4Tracker.trackPollVote(option);
+    
+    // Visual feedback
+    document.querySelectorAll('.poll__option').forEach(btn => {
+        btn.disabled = true;
+        if (btn.dataset.option === option) {
+            btn.style.background = 'var(--color-primary)';
+            btn.style.color = 'white';
+        }
+    });
+
+    // Update vote count locally
+    const optionData = pollState.results.find(r => r.id === option);
+    if (optionData) {
+        optionData.votes++;
+    }
+
+    pollState.hasVoted = true;
+    localStorage.setItem('kud_poll_voted', 'true');
+    
+    // Save updated poll data
+    savePollDataToStorage();
+    
+    // Show results after delay
+    setTimeout(() => {
+        showPollResults();
+    }, 1000);
+}
+
+function showPollResults() {
+    const pollQuestion = document.getElementById('poll-question');
+    const pollResults = document.getElementById('poll-results');
+    const resultsContainer = document.getElementById('poll-results-container');
+    const totalVotes = document.getElementById('total-votes');
+
+    if (!pollQuestion || !pollResults || !resultsContainer) return;
+
+    pollQuestion.style.display = 'none';
+    pollResults.style.display = 'block';
+
+    const total = pollState.results.reduce((sum, option) => sum + option.votes, 0);
+
+    resultsContainer.innerHTML = pollState.results
+        .sort((a, b) => b.votes - a.votes)
+        .map(option => {
+            const percentage = total > 0 ? Math.round((option.votes / total) * 100) : 0;
+            return `
+                <div class="poll__result-item">
+                    <div class="poll__result-header">
+                        <span class="poll__result-label">${option.label}</span>
+                        <span class="poll__result-percentage">${percentage}%</span>
+                    </div>
+                    <div class="poll__result-bar">
+                        <div class="poll__result-fill" style="width: ${percentage}%"></div>
+                    </div>
+                    <span class="poll__result-votes">${option.votes} votes</span>
+                </div>
+            `;
+        }).join('');
+
+    if (totalVotes) {
+        totalVotes.textContent = `${total} total votes`;
+    }
+}
+
+function loadPollDataFromStorage() {
+    const savedPoll = localStorage.getItem('kud_poll_data');
+    if (savedPoll) {
+        try {
+            pollState.results = JSON.parse(savedPoll);
+        } catch (e) {
+            console.log('Using default poll data');
+        }
+    }
+}
+
+function savePollDataToStorage() {
+    localStorage.setItem('kud_poll_data', JSON.stringify(pollState.results));
 }
 
 // =================
-// UNIFIED CAROUSEL SYSTEM
+// CONTACT FORM WITH GA4 TRACKING
 // =================
+function initializeContactForm() {
+    const form = document.getElementById('contact-form');
+    if (!form) return;
 
-function makeCarousel({
-    containerSelector,
-    prevSelector,
-    nextSelector,
-    cardGap = 16,
-    autoPlay = false,
-    autoPlayInterval = 5000,
-    cardWidth = null,
-    visibleCards = null
-}) {
+    // Track when user starts interacting with form
+    let formStartTracked = false;
+    const formInputs = form.querySelectorAll('input, textarea');
+    
+    formInputs.forEach(input => {
+        input.addEventListener('focus', () => {
+            if (!formStartTracked) {
+                ga4Tracker.trackContactFormStart();
+                formStartTracked = true;
+            }
+        });
+    });
+
+    form.addEventListener('submit', handleContactSubmission);
+}
+
+async function handleContactSubmission(event) {
+    event.preventDefault();
+    
+    const form = event.target;
+    const submitBtn = form.querySelector('button[type="submit"]');
+    const feedback = document.getElementById('contact-feedback');
+    const feedbackContent = document.getElementById('feedback-content');
+    
+    // Collect form data
+    const formData = {
+        name: form.name.value.trim(),
+        email: form.email.value.trim(),
+        phone: form.phone ? form.phone.value.trim() : '',
+        message: form.message.value.trim(),
+        timestamp: new Date().toISOString()
+    };
+    
+    // Basic validation
+    if (!formData.name || !formData.email || !formData.message) {
+        ga4Tracker.trackContactFormError('Missing required fields');
+        showContactError('Please fill in all required fields.');
+        return;
+    }
+    
+    if (!isValidEmail(formData.email)) {
+        ga4Tracker.trackContactFormError('Invalid email format');
+        showContactError('Please enter a valid email address.');
+        return;
+    }
+    
+    // Update UI
+    if (submitBtn) {
+        submitBtn.disabled = true;
+        submitBtn.textContent = 'Submitting...';
+    }
+    
+    try {
+        // Track successful submission
+        ga4Tracker.trackContactFormSubmission(formData);
+        
+        // Show success message
+        if (feedback && feedbackContent) {
+            feedback.className = 'contact__feedback success';
+            feedbackContent.innerHTML = `
+                <strong>Thank you, ${formData.name}!</strong><br>
+                We've received your inquiry and will contact you within 24 hours at ${formData.email}.
+            `;
+            feedback.style.display = 'block';
+        }
+        
+        // Reset form
+        form.reset();
+        
+        // Store lead data locally for future reference
+        storeLeadData(formData);
+        
+    } catch (error) {
+        ga4Tracker.trackContactFormError(error.message);
+        showContactError('Thank you for your interest! We have received your message.');
+    }
+    
+    // Reset button
+    if (submitBtn) {
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'Send Message';
+    }
+    
+    // Hide feedback after 8 seconds
+    setTimeout(() => {
+        if (feedback) feedback.style.display = 'none';
+    }, 8000);
+}
+
+function showContactError(message) {
+    const feedback = document.getElementById('contact-feedback');
+    const feedbackContent = document.getElementById('feedback-content');
+    
+    if (feedback && feedbackContent) {
+        feedback.className = 'contact__feedback error';
+        feedbackContent.innerHTML = message;
+        feedback.style.display = 'block';
+    }
+}
+
+function isValidEmail(email) {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(email);
+}
+
+function storeLeadData(formData) {
+    const leads = JSON.parse(localStorage.getItem('kud_leads') || '[]');
+    leads.push({
+        ...formData,
+        id: Date.now(),
+        source: 'website_contact_form'
+    });
+    localStorage.setItem('kud_leads', JSON.stringify(leads));
+}
+
+// =================
+// PROGRAMS SECTION WITH TRACKING
+// =================
+function renderPrograms() {
+    const container = document.getElementById('programs-carousel');
+    if (!container) return;
+
+    container.innerHTML = appData.programs.map(program => `
+        <div class="program__card" data-program="${program.name}">
+            <div class="program__header">
+                <h3 class="program__title">${program.name}</h3>
+                <p class="program__description">${program.description}</p>
+            </div>
+            
+            <div class="program__content">
+                <div class="program__courses">
+                    <strong>Key Courses:</strong>
+                    <p>${program.courses.split(', ').slice(0, 4).join(', ')}...</p>
+                </div>
+                
+                <div class="program__careers">
+                    <strong>Career Opportunities:</strong>
+                    <p>${program.career_paths.join(', ')}</p>
+                </div>
+            </div>
+            
+            <div class="program__footer">
+                <button class="program__btn" onclick="trackProgramInterest('${program.name}')">
+                    Learn More
+                </button>
+            </div>
+        </div>
+    `).join('');
+}
+
+function trackProgramInterest(programName) {
+    ga4Tracker.trackProgramInterest(programName);
+    
+    // Scroll to contact section
+    setTimeout(() => {
+        scrollToSection('contact');
+    }, 300);
+}
+
+// =================
+// SCROLL TRACKING
+// =================
+function initializeScrollTracking() {
+    const sections = document.querySelectorAll('section[id]');
+    const sectionTracker = new Set();
+    
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting && entry.intersectionRatio > 0.5) {
+                const sectionId = entry.target.id;
+                if (!sectionTracker.has(sectionId)) {
+                    ga4Tracker.trackPageSection(sectionId);
+                    sectionTracker.add(sectionId);
+                }
+            }
+        });
+    }, {
+        threshold: 0.5
+    });
+    
+    sections.forEach(section => {
+        observer.observe(section);
+    });
+}
+
+// =================
+// CAROUSEL SYSTEM (Unchanged)
+// =================
+function makeCarousel({ containerSelector, prevSelector, nextSelector, cardGap = 16, autoPlay = false, autoPlayInterval = 5000, cardWidth = null, visibleCards = null }) {
     const container = document.querySelector(containerSelector);
     const prev = document.querySelector(prevSelector);
     const next = document.querySelector(nextSelector);
@@ -227,76 +957,61 @@ function makeCarousel({
         console.warn(`Carousel elements not found for ${containerSelector}`);
         return null;
     }
-
+    
     let index = 0;
     let autoPlayTimer = null;
     let isAnimating = false;
-
+    
     const getCardWidth = () => {
         if (cardWidth) return cardWidth;
         const firstCard = container.children[0];
         return firstCard ? firstCard.offsetWidth + cardGap : 300;
     };
-
+    
     const getVisibleCards = () => {
         if (visibleCards) return visibleCards;
         const containerWidth = container.parentElement.offsetWidth;
         const cardWidthActual = getCardWidth();
         return Math.max(1, Math.floor(containerWidth / cardWidthActual));
     };
-
+    
     const updateCarousel = () => {
         if (isAnimating) return;
         isAnimating = true;
         
-        // const cardWidthActual = getCardWidth();
-        // const translateX = -index * cardWidthActual;
-        // container.style.transform = `translateX(${translateX}px)`;
-
         const translateX = -index * getCardWidth();
         container.style.transform = `translateX(${translateX}px)`;
         
-        // Update button states
         const maxIndex = Math.max(0, container.children.length - getVisibleCards());
         prev.disabled = index === 0;
-        next.disabled = index == maxIndex;
+        next.disabled = index >= maxIndex;
         
         setTimeout(() => {
             isAnimating = false;
         }, 500);
     };
-
+    
     const moveCarousel = (direction) => {
         if (isAnimating) return;
-        
         const maxIndex = Math.max(0, container.children.length - getVisibleCards());
-        //const newIndex = Math.max(0, Math.min(index + direction, maxIndex));
-        
-        // if (newIndex !== index) {
-        //     index = newIndex;
-        //     updateCarousel();
-        // }
-
-
-
-        index = (index + direction + (maxIndex + 1)) % (maxIndex + 1);   // <-- wrap
+        index = Math.max(0, Math.min(index + direction, maxIndex));
         updateCarousel();
     };
-
+    
     const nextSlide = () => {
         const maxIndex = Math.max(0, container.children.length - getVisibleCards());
         if (index >= maxIndex && autoPlay) {
-            index = 0; // Loop back to start for autoplay
+            index = 0;
         } else {
             moveCarousel(1);
         }
         updateCarousel();
     };
-
+    
     const prevSlide = () => {
         moveCarousel(-1);
     };
-
+    
     // Event listeners
     if (prev) {
         prev.addEventListener('click', (e) => {
@@ -305,7 +1020,7 @@ function makeCarousel({
             if (autoPlay) restartAutoPlay();
         });
     }
-
+    
     if (next) {
         next.addEventListener('click', (e) => {
             e.preventDefault();
@@ -313,23 +1028,23 @@ function makeCarousel({
             if (autoPlay) restartAutoPlay();
         });
     }
-
+    
     // Touch support
     let startX = 0;
     let currentX = 0;
     let isDragging = false;
-
+    
     container.addEventListener('touchstart', (e) => {
         startX = e.touches[0].clientX;
         isDragging = true;
         if (autoPlay) stopAutoPlay();
     }, { passive: true });
-
+    
     container.addEventListener('touchmove', (e) => {
         if (!isDragging) return;
         currentX = e.touches[0].clientX;
     }, { passive: true });
-
+    
     container.addEventListener('touchend', () => {
         if (!isDragging) return;
         isDragging = false;
@@ -342,46 +1057,43 @@ function makeCarousel({
                 prevSlide();
             }
         }
-        
         if (autoPlay) restartAutoPlay();
     });
-
+    
     // Auto-play functionality
     const startAutoPlay = () => {
         if (!autoPlay) return;
         autoPlayTimer = setInterval(nextSlide, autoPlayInterval);
     };
-
+    
     const stopAutoPlay = () => {
         if (autoPlayTimer) {
             clearInterval(autoPlayTimer);
             autoPlayTimer = null;
         }
     };
-
+    
     const restartAutoPlay = () => {
         stopAutoPlay();
         startAutoPlay();
     };
-
+    
     // Hover pause for autoplay
     if (autoPlay) {
         container.parentElement.addEventListener('mouseenter', stopAutoPlay);
         container.parentElement.addEventListener('mouseleave', startAutoPlay);
         startAutoPlay();
     }
-
+    
     // Window resize handler
     const handleResize = debounce(() => {
         updateCarousel();
     }, 250);
-
     window.addEventListener('resize', handleResize);
-
+    
     // Initial setup
     updateCarousel();
-    container.addEventListener('transitionend', () => { isAnimating = false; });
-
+    
     return {
         nextSlide,
         prevSlide,
@@ -397,16 +1109,6 @@ function makeCarousel({
 }
 
 function initializeAllCarousels() {
-    // Hero Carousel (if exists)
-    const heroCarousel = makeCarousel({
-        containerSelector: '.carousel-slides',
-        prevSelector: '.carousel__btn--prev',
-        nextSelector: '.carousel__btn--next',
-        autoPlay: true,
-        autoPlayInterval: 5000,
-        visibleCards: 1
-    });
-
     // Programs Carousel
     const programsCarousel = makeCarousel({
         containerSelector: '#programs-carousel',
@@ -416,9 +1118,9 @@ function initializeAllCarousels() {
         autoPlayInterval: 4000,
         visibleCards: 2,
         cardGap: 24,
-        cardWidth: 374 // 350px + 24px gap
+        cardWidth: 374
     });
-
+    
     // Faculty Carousel
     const facultyCarousel = makeCarousel({
         containerSelector: '.faculty-container',
@@ -427,9 +1129,9 @@ function initializeAllCarousels() {
         autoPlay: true,
         autoPlayInterval: 4000,
         cardGap: 16,
-        cardWidth: 296 // 280px + 16px gap
+        cardWidth: 296
     });
-
+    
     // Campus Carousel
     const campusCarousel = makeCarousel({
         containerSelector: '.campus-container',
@@ -439,63 +1141,29 @@ function initializeAllCarousels() {
         autoPlay: true,
         autoPlayInterval: 6000,
         cardGap: 16,
-        cardWidth: 366 // 350px + 16px gap
-    });
-
-    // Hero indicators (if hero carousel exists)
-    initializeHeroIndicators();
-}
-
-function initializeHeroIndicators() {
-    const indicators = document.querySelectorAll('.indicator');
-    const slides = document.querySelectorAll('.slide');
-    
-    if (!indicators.length || !slides.length) return;
-
-    let currentSlide = 0;
-
-    indicators.forEach((indicator, index) => {
-        indicator.addEventListener('click', () => {
-            // Remove active class from all
-            slides.forEach(slide => slide.classList.remove('active'));
-            indicators.forEach(ind => ind.classList.remove('active'));
-            
-            // Add active class to current
-            slides[index].classList.add('active');
-            indicators[index].classList.add('active');
-            
-            currentSlide = index;
-            
-            // Update carousel position
-            const slidesContainer = document.querySelector('.carousel-slides');
-            if (slidesContainer) {
-                slidesContainer.style.transform = `translateX(-${index * 100}%)`;
-            }
-        });
+        cardWidth: 366
     });
 }
 
 // =================
 // NAVIGATION FUNCTIONALITY
 // =================
-
 function initializeNavigation() {
     const navToggle = document.getElementById('nav-toggle');
     const navMenu = document.getElementById('nav-menu');
     const navLinks = document.querySelectorAll('.nav__link');
-
+    
     if (navToggle && navMenu) {
         navToggle.addEventListener('click', () => {
             navMenu.classList.toggle('show');
         });
     }
-
+    
     // Close menu when clicking on a link
     navLinks.forEach(link => {
         link.addEventListener('click', (e) => {
             if (navMenu) navMenu.classList.remove('show');
             
-            // Handle smooth scrolling
             const href = link.getAttribute('href');
             if (href && href.startsWith('#')) {
                 e.preventDefault();
@@ -503,7 +1171,7 @@ function initializeNavigation() {
             }
         });
     });
-
+    
     // Handle header scroll effect
     window.addEventListener('scroll', handleHeaderScroll);
     
@@ -546,461 +1214,60 @@ function handleHeaderScroll() {
 }
 
 // =================
-// PROGRAMS SECTION
+// RENDER FUNCTIONS
 // =================
-
-function renderPrograms() {
-    const container = document.getElementById('programs-carousel');
-    if (!container) return;
-
-    container.innerHTML = appData.programs.map(program => `
-        <div class="program__card">
-            <h3>${program.name}</h3>
-            <p>${program.description}</p>
-            <div class="program__courses">
-                <h4>Key Courses:</h4>
-                <ul>
-                    ${program.courses.split(', ').slice(0, 6).map(course => `<li>${course}</li>`).join('')}
-                </ul>
-            </div>
-            <div class="program__careers">
-                ${program.career_paths.map(career => `<span class="career__tag">${career}</span>`).join('')}
-            </div>
-        </div>
-    `).join('');
-}
-
-// =================
-// QUIZ FUNCTIONALITY
-// =================
-
-function initializeQuiz() {
-    setTimeout(() => {
-        renderQuizQuestion();
-    }, 100);
-}
-
-function renderQuizQuestion() {
-    const quizContent = document.getElementById('quiz-content');
-    if (!quizContent) return;
-
-    if (currentQuiz.currentQuestion >= quizQuestions.length) {
-        calculateQuizResult();
-        return;
-    }
-
-    const question = quizQuestions[currentQuiz.currentQuestion];
-    
-    quizContent.innerHTML = `
-        <div class="quiz__question">
-            <h3>Question ${currentQuiz.currentQuestion + 1} of ${quizQuestions.length}</h3>
-            <h3>${question.question}</h3>
-            <div class="quiz__answers">
-                ${question.answers.map((answer, index) => `
-                    <button class="quiz__answer" data-stream="${answer.stream}" data-index="${index}">
-                        ${answer.text}
-                    </button>
-                `).join('')}
-            </div>
-        </div>
-        <div class="quiz__navigation">
-            <div class="quiz__progress">
-                Question ${currentQuiz.currentQuestion + 1} of ${quizQuestions.length}
-            </div>
-            ${currentQuiz.currentQuestion > 0 ? 
-                '<button class="btn btn--outline" onclick="previousQuestion()">Previous</button>' : 
-                '<div></div>'
-            }
-        </div>
-    `;
-
-    // Add event listeners to quiz answers
-    const answers = quizContent.querySelectorAll('.quiz__answer');
-    answers.forEach(answer => {
-        answer.addEventListener('click', () => {
-            const stream = answer.dataset.stream;
-            const index = parseInt(answer.dataset.index);
-            selectQuizAnswer(stream, index);
-        });
-    });
-}
-
-function selectQuizAnswer(stream, answerIndex) {
-    // Visual feedback
-    const answers = document.querySelectorAll('.quiz__answer');
-    answers.forEach((answer, index) => {
-        answer.classList.toggle('selected', index === answerIndex);
-        answer.disabled = true;
-    });
-
-    // Store answer
-    currentQuiz.answers[currentQuiz.currentQuestion] = stream;
-
-    // Auto-advance after a short delay
-    setTimeout(() => {
-        nextQuestion();
-    }, 800);
-}
-
-function nextQuestion() {
-    currentQuiz.currentQuestion++;
-    renderQuizQuestion();
-}
-
-function previousQuestion() {
-    if (currentQuiz.currentQuestion > 0) {
-        currentQuiz.currentQuestion--;
-        renderQuizQuestion();
-    }
-}
-
-function calculateQuizResult() {
-    // Count answers for each stream
-    const streamCounts = {};
-    currentQuiz.answers.forEach(stream => {
-        streamCounts[stream] = (streamCounts[stream] || 0) + 1;
-    });
-
-    // Find the most recommended stream
-    let recommendedStream = '';
-    let maxCount = 0;
-    
-    Object.entries(streamCounts).forEach(([stream, count]) => {
-        if (count > maxCount) {
-            maxCount = count;
-            recommendedStream = stream;
-        }
-    });
-
-    // Find the program details
-    const program = appData.programs.find(p => p.name === recommendedStream);
-    
-    if (program) {
-        showQuizResult(program);
-    }
-}
-
-function showQuizResult(program) {
-    const quizContent = document.getElementById('quiz-content');
-    const quizResult = document.getElementById('quiz-result');
-    
-    if (!quizContent || !quizResult || !program) return;
-
-    quizContent.style.display = 'none';
-    quizResult.style.display = 'block';
-
-    const recommendation = document.getElementById('quiz-recommendation');
-    if (recommendation) {
-        recommendation.innerHTML = `
-            <h4>${program.name}</h4>
-            <p>${program.description}</p>
-            <p><strong>Key courses you'll study:</strong> ${program.courses.split(', ').slice(0, 4).join(', ')}...</p>
-            <p><strong>Career opportunities:</strong> ${program.career_paths.join(', ')}</p>
-        `;
-    }
-
-    currentQuiz.isCompleted = true;
-}
-
-function restartQuiz() {
-    currentQuiz = {
-        currentQuestion: 0,
-        answers: [],
-        isCompleted: false
-    };
-    
-    const quizContent = document.getElementById('quiz-content');
-    const quizResult = document.getElementById('quiz-result');
-    
-    if (quizContent) quizContent.style.display = 'block';
-    if (quizResult) quizResult.style.display = 'none';
-    
-    renderQuizQuestion();
-}
-
-// =================
-// POLL FUNCTIONALITY
-// =================
-
-function initializePoll() {
-    const pollOptionsContainer = document.getElementById('poll-options');
-    if (!pollOptionsContainer) return;
-
-    // Render poll options
-    pollOptionsContainer.innerHTML = pollOptions.map(option => `
-        <button class="poll__option" data-option="${option.id}">${option.label}</button>
-    `).join('');
-
-    // Add event listeners
-    const buttons = pollOptionsContainer.querySelectorAll('.poll__option');
-    buttons.forEach(button => {
-        button.addEventListener('click', () => {
-            if (!pollState.hasVoted) {
-                handlePollVote(button.dataset.option);
-            }
-        });
-    });
-}
-
-function handlePollVote(option) {
-    if (pollState.hasVoted) return;
-
-    // Visual feedback
-    document.querySelectorAll('.poll__option').forEach(btn => {
-        btn.disabled = true;
-        if (btn.dataset.option === option) {
-            btn.style.background = 'var(--color-primary)';
-            btn.style.color = 'white';
-        }
-    });
-
-    // Update vote count
-    const optionData = pollState.results.find(r => r.id === option);
-    if (optionData) {
-        optionData.votes++;
-    }
-
-    pollState.hasVoted = true;
-    
-    // Show results immediately
-    setTimeout(() => {
-        showPollResults();
-    }, 500);
-
-    // Try to submit to backend
-    submitPollVote(option);
-}
-
-async function submitPollVote(option) {
-    try {
-        const response = await fetch(API_URL, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-                action: 'submitPollVote',
-                option: option,
-                timestamp: new Date().toISOString()
-            })
-        });
-
-        if (response.ok) {
-            // Refresh results from server
-            setTimeout(loadPollData, 1000);
-        } else {
-            console.error('Poll submission failed:', response.statusText);
-        }
-    } catch (error) {
-        console.error('Poll submission failed:', error);
-    }
-}
-
-async function loadPollData() {
-    try {
-        const response = await fetch(`${API_URL}?action=getPollResults`);
-        const data = await response.json();
-        
-        if (data.results) {
-            pollState.results = data.results;
-            if (pollState.hasVoted) {
-                showPollResults();
-            }
-        }
-    } catch (error) {
-        console.log('Using local poll data');
-    }
-}
-
-function showPollResults() {
-    const pollQuestion = document.getElementById('poll-question');
-    const pollResults = document.getElementById('poll-results');
-    const resultsContainer = document.getElementById('poll-results-container');
-    const totalVotes = document.getElementById('total-votes');
-
-    if (!pollQuestion || !pollResults || !resultsContainer) return;
-
-    pollQuestion.style.display = 'none';
-    pollResults.style.display = 'block';
-
-    const total = pollState.results.reduce((sum, option) => sum + option.votes, 0);
-    
-    resultsContainer.innerHTML = pollState.results.map(option => {
-        const percentage = total > 0 ? Math.round((option.votes / total) * 100) : 0;
-        return `
-            <div class="poll__result-item">
-                <div class="poll__result-label">
-                    <span>${option.label}</span>
-                    <span>${option.votes} votes (${percentage}%)</span>
-                </div>
-                <div class="poll__result-bar">
-                    <div class="poll__result-fill" style="width: ${percentage}%"></div>
-                </div>
-            </div>
-        `;
-    }).join('');
-
-    if (totalVotes) {
-        totalVotes.textContent = total;
-    }
-}
-
-// =================
-// FACULTY SECTION
-// =================
-
 function renderFaculty() {
     const container = document.querySelector('.faculty-container');
     if (!container) return;
-
-    container.innerHTML = appData.faculty.map(faculty => `
-        <div class="faculty-slide">
-            <div class="faculty-card">
-                <div class="faculty-info">
-                    <h3>${faculty.name}</h3>
-                    <div class="designation">Professor & Head</div>
-                    <div class="qualifications">Ph.D. ${faculty.expertise}</div>
-                    <div class="experience">${faculty.experience}</div>
-                    <div class="specialization">${faculty.expertise}</div>
-                </div>
+    
+    container.innerHTML = appData.faculty.map(member => `
+        <div class="faculty__card">
+            <div class="faculty__info">
+                <h3 class="faculty__name">${member.name}</h3>
+                <p class="faculty__expertise">${member.expertise}</p>
+                <p class="faculty__experience">${member.experience}</p>
             </div>
         </div>
     `).join('');
 }
-
-// =================
-// TESTIMONIALS SECTION
-// =================
 
 function renderTestimonials() {
-    const container = document.getElementById('testimonials-grid');
+    const container = document.querySelector('.testimonials-container');
     if (!container) return;
-
+    
     container.innerHTML = appData.testimonials.map(testimonial => `
         <div class="testimonial__card">
-            <div class="testimonial__quote">${testimonial.quote}</div>
+            <blockquote class="testimonial__quote">
+                "${testimonial.quote}"
+            </blockquote>
             <div class="testimonial__author">
-                <div class="testimonial__avatar">
-                    ${testimonial.name.split(' ').map(n => n[0]).join('')}
-                </div>
-                <div class="testimonial__info">
-                    <h5>${testimonial.name}</h5>
-                    <p>${testimonial.position}</p>
-                </div>
+                <strong>${testimonial.name}</strong>
+                <span>${testimonial.position}</span>
             </div>
         </div>
     `).join('');
 }
 
-// =================
-// RECRUITERS SECTION
-// =================
-
 function renderRecruiters() {
-    const track = document.getElementById('recruiters-track');
-    if (!track) return;
-
-    // Duplicate the array for seamless scrolling
-    const allRecruiters = [...appData.recruiters, ...appData.recruiters];
+    const container = document.querySelector('.recruiters-grid');
+    if (!container) return;
     
-    track.innerHTML = allRecruiters.map(recruiter => `
-        <div class="recruiter__logo">${recruiter}</div>
+    container.innerHTML = appData.recruiters.map(recruiter => `
+        <div class="recruiter__item">
+            <span class="recruiter__name">${recruiter}</span>
+        </div>
     `).join('');
-}
-
-// =================
-// CONTACT FORM FUNCTIONALITY
-// =================
-
-function initializeContactForm() {
-    const form = document.getElementById('contact-form');
-    if (!form) return;
-
-    form.addEventListener('submit', handleContactSubmit);
-}
-
-async function handleContactSubmit(event) {
-    event.preventDefault();
-    
-    const form = event.target;
-    const submitBtn = form.querySelector('button[type="submit"]');
-    const feedback = document.getElementById('contact-feedback');
-    const feedbackContent = document.getElementById('feedback-content');
-
-    // Show loading state
-    if (submitBtn) {
-        submitBtn.disabled = true;
-        submitBtn.textContent = 'Sending...';
-    }
-
-    try {
-        const formData = new FormData(form);
-        const data = {
-            action: 'submitContact',
-            name: formData.get('name'),
-            email: formData.get('email'),
-            phone: formData.get('phone'),
-            specialization: formData.get('specialization'),
-            message: formData.get('message'),
-            timestamp: new Date().toISOString()
-        };
-
-        const response = await fetch(API_URL, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify(data)
-        });
-
-        if (response.ok) {
-            if (feedback && feedbackContent) {
-                feedback.className = 'contact__feedback success';
-                feedbackContent.innerHTML = `
-                    <h4>Message Sent Successfully!</h4>
-                    <p>Thank you for your interest in our MBA program. We'll get back to you within 24 hours.</p>
-                `;
-                form.reset();
-                feedback.style.display = 'block';
-            }
-        } else {
-            throw new Error('Backend submission failed');
-        }
-    } catch (error) {
-        console.error('Contact submission failed:', error);
-        if (feedback && feedbackContent) {
-            feedback.className = 'contact__feedback error';
-            feedbackContent.innerHTML = `
-                <h4>Message Received</h4>
-                <p>Thank you for your interest! We've received your message and will contact you soon.</p>
-            `;
-            feedback.style.display = 'block';
-        }
-    }
-
-    // Reset button
-    if (submitBtn) {
-        submitBtn.disabled = false;
-        submitBtn.textContent = 'Send Message';
-    }
-
-    // Hide feedback after 5 seconds
-    setTimeout(() => {
-        if (feedback) feedback.style.display = 'none';
-    }, 5000);
 }
 
 // =================
 // ANIMATIONS
 // =================
-
 function initializeAnimations() {
-    // Intersection Observer for animations
     const observerOptions = {
         threshold: 0.1,
         rootMargin: '0px 0px -50px 0px'
     };
-
+    
     const observer = new IntersectionObserver((entries) => {
         entries.forEach(entry => {
             if (entry.isIntersecting) {
@@ -1008,8 +1275,7 @@ function initializeAnimations() {
             }
         });
     }, observerOptions);
-
-    // Observe sections for animations
+    
     setTimeout(() => {
         const sections = document.querySelectorAll('section, .program__card, .faculty__card, .testimonial__card');
         sections.forEach(section => {
@@ -1021,7 +1287,6 @@ function initializeAnimations() {
 // =================
 // UTILITY FUNCTIONS
 // =================
-
 function debounce(func, wait) {
     let timeout;
     return function executedFunction(...args) {
@@ -1034,20 +1299,28 @@ function debounce(func, wait) {
     };
 }
 
-// Handle window resize for responsive behavior
+// Handle window resize
 window.addEventListener('resize', debounce(() => {
-    // Carousels will handle their own resize through their individual handlers
     console.log('Window resized, carousels updating...');
 }, 250));
 
 // Global error handler
 window.addEventListener('error', (event) => {
     console.error('JavaScript Error:', event.error);
+    if (ga4Tracker) {
+        gtag('event', 'javascript_error', {
+            event_category: 'error',
+            error_message: event.error.message,
+            error_filename: event.filename,
+            error_lineno: event.lineno
+        });
+    }
 });
 
 // Expose functions to global scope for HTML onclick handlers
 window.restartQuiz = restartQuiz;
 window.nextQuestion = nextQuestion;
 window.previousQuestion = previousQuestion;
+window.trackProgramInterest = trackProgramInterest;
 
-console.log('MBA Website JavaScript loaded successfully');
+console.log('MBA Website JavaScript with GA4 tracking loaded successfully');
