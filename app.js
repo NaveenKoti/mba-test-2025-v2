@@ -2,7 +2,7 @@
 // Google Analytics 4 Configuration
 const GA4_CONFIG = {
     measurementId: 'G-9FVVBS9GQV', // Replace with your GA4 Measurement ID
-    debug: false // Set to true for development
+    debug: true // Set to true for development
 };
 
 // Application data (keeping your original data structure)
@@ -182,7 +182,7 @@ let pollState = {
 
 // Google Analytics 4 Tracking Class
 class GA4Tracker {
-    constructor(measurementId, debug = false) {
+    constructor(measurementId, debug = true) {
         this.measurementId = measurementId;
         this.debug = debug;
         this.sessionId = this.generateSessionId();
