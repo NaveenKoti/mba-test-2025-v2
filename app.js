@@ -418,7 +418,7 @@ function initializeQuiz() {
     };
 
     // Check if quiz container exists
-    const quizContainer = document.getElementById('quiz-container');
+    const quizContainer = document.getElementById('quiz__container');
     if (!quizContainer) {
         console.warn('Quiz container not found');
         return;
