@@ -369,7 +369,7 @@ class GA4Tracker {
     }
 }
 
-// Enhanced Contact Form Handler
+// Enhanced Contact Form Handler with Complete Data Capture
 class ContactFormHandler {
     constructor(ga4Tracker) {
         this.ga4Tracker = ga4Tracker;
@@ -405,6 +405,15 @@ class ContactFormHandler {
             input.addEventListener('blur', () => this.validateField(input));
             input.addEventListener('input', () => this.clearFieldError(input));
         });
+
+        // Track dropdown changes specifically
+        const programSelect = this.form.querySelector('[name="program"]');
+        if (programSelect) {
+            programSelect.addEventListener('change', (e) => {
+                console.log('Program selected:', e.target.value);
+                this.trackDropdownSelection(e.target.value);
+            });
+        }
     }
 
     handleFormStart() {
@@ -421,9 +430,12 @@ class ContactFormHandler {
 
         console.log('Form submission started');
         
-        // Collect all form data
-        const formData = this.collectFormData();
-        console.log('Form data collected:', formData);
+        // Collect all form data with enhanced details
+        const formData = this.collectComprehensiveFormData();
+        console.log('Complete form data collected:', formData);
+
+        // Display captured data in console for verification
+        this.displayCapturedData(formData);
 
         // Validate form
         const validation = this.validateForm(formData);
@@ -440,7 +452,7 @@ class ContactFormHandler {
             // Process the submission
             await this.processSubmission(formData);
             
-            // Track successful submission
+            // Track successful submission with all details
             this.trackFormSubmission(formData);
             
             // Show success and reset
@@ -456,10 +468,11 @@ class ContactFormHandler {
         }
     }
 
-    collectFormData() {
+    collectComprehensiveFormData() {
         const formData = {};
         const formElements = this.form.elements;
 
+        // Collect all form field values
         for (let element of formElements) {
             if (element.name && element.type !== 'submit') {
                 if (element.type === 'checkbox') {
@@ -474,43 +487,122 @@ class ContactFormHandler {
             }
         }
 
-        // Add metadata
-        formData.timestamp = new Date().toISOString();
-        formData.userAgent = navigator.userAgent;
-        formData.referrer = document.referrer;
-        formData.currentUrl = window.location.href;
+        // Enhanced contact details collection
+        const contactDetails = {
+            fullName: formData.name || '',
+            emailAddress: formData.email || '',
+            phoneNumber: formData.phone || '',
+            programInterest: formData.program || 'Not specified',
+            message: formData.message || '',
+            honeypot: formData.website || '' // spam check
+        };
 
-        return formData;
+        // Additional metadata
+        const metadata = {
+            submissionId: 'KUD_' + Date.now() + '_' + Math.random().toString(36).substr(2, 6),
+            timestamp: new Date().toISOString(),
+            submissionDate: new Date().toLocaleDateString('en-IN'),
+            submissionTime: new Date().toLocaleTimeString('en-IN'),
+            userAgent: navigator.userAgent,
+            referrer: document.referrer || 'Direct',
+            currentUrl: window.location.href,
+            screenResolution: `${window.screen.width}x${window.screen.height}`,
+            windowSize: `${window.innerWidth}x${window.innerHeight}`,
+            timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+            language: navigator.language,
+            platform: navigator.platform
+        };
+
+        // Form interaction tracking
+        const interactionData = {
+            timeSpentOnForm: this.getFormInteractionTime(),
+            fieldInteractionCount: this.getFieldInteractionCount(),
+            formStartTime: this.formStartTime || new Date().toISOString(),
+            formEndTime: new Date().toISOString()
+        };
+
+        // Combine all data
+        return {
+            ...formData,
+            contactDetails,
+            metadata,
+            interactionData,
+            // Individual fields for easy access
+            name: contactDetails.fullName,
+            email: contactDetails.emailAddress,
+            phone: contactDetails.phoneNumber,
+            program: contactDetails.programInterest,
+            message: contactDetails.message
+        };
+    }
+
+    displayCapturedData(formData) {
+        console.group('📋 CAPTURED FORM DATA');
+        console.log('👤 Contact Details:');
+        console.table(formData.contactDetails);
+        
+        console.log('📊 Form Metadata:');
+        console.table(formData.metadata);
+        
+        console.log('⏱️ Interaction Data:');
+        console.table(formData.interactionData);
+        
+        console.log('💬 Message Content:');
+        console.log(formData.contactDetails.message);
+        
+        console.log('🎯 Selected Program:');
+        console.log(formData.contactDetails.programInterest);
+        console.groupEnd();
+    }
+
+    getFormInteractionTime() {
+        if (this.formStartTime) {
+            return Math.round((Date.now() - this.formStartTime) / 1000);
+        }
+        return 0;
+    }
+
+    getFieldInteractionCount() {
+        // This could be enhanced to track actual field interactions
+        const filledFields = [
+            this.form.name?.value,
+            this.form.email?.value,
+            this.form.phone?.value,
+            this.form.program?.value,
+            this.form.message?.value
+        ].filter(field => field && field.trim().length > 0);
+        
+        return filledFields.length;
     }
 
     validateForm(formData) {
         const errors = [];
         
         // Required field validation
-        if (!formData.name || formData.name.length < 2) {
+        if (!formData.contactDetails.fullName || formData.contactDetails.fullName.length < 2) {
             errors.push('Name must be at least 2 characters long');
             this.markFieldError('name');
         }
 
-        if (!formData.email || !this.isValidEmail(formData.email)) {
+        if (!formData.contactDetails.emailAddress || !this.isValidEmail(formData.contactDetails.emailAddress)) {
             errors.push('Please enter a valid email address');
             this.markFieldError('email');
         }
 
-        if (!formData.message || formData.message.length < 10) {
+        if (!formData.contactDetails.message || formData.contactDetails.message.length < 10) {
             errors.push('Message must be at least 10 characters long');
             this.markFieldError('message');
         }
 
         // Honeypot check
-        if (formData.website) {
+        if (formData.contactDetails.honeypot) {
             errors.push('Spam detected');
         }
 
         // Phone validation (if provided)
-        if (formData.phone && formData.phone.length > 0) {
+        if (formData.contactDetails.phoneNumber && formData.contactDetails.phoneNumber.length > 0) {
             const phoneRegex = /^[\+]?[1-9][\d]{0,15}$/;
-            if (!phoneRegex.test(formData.phone.replace(/[\s\-\(\)]/g, ''))) {
+            if (!phoneRegex.test(formData.contactDetails.phoneNumber.replace(/[\s\-\(\)]/g, ''))) {
                 errors.push('Please enter a valid phone number');
                 this.markFieldError('phone');
             }
@@ -591,36 +683,59 @@ class ContactFormHandler {
         // Simulate processing time for better UX
         await new Promise(resolve => setTimeout(resolve, 1000));
         
-        // Store the submission data
-        this.storeSubmissionData(formData);
+        // Store the comprehensive submission data
+        this.storeComprehensiveSubmissionData(formData);
         
         return { success: true, data: formData };
     }
 
-    storeSubmissionData(formData) {
+    storeComprehensiveSubmissionData(formData) {
         try {
-            // Store in localStorage for persistence
+            // Store complete form submissions
             const submissions = JSON.parse(localStorage.getItem('kud_form_submissions') || '[]');
             submissions.push({
                 ...formData,
-                id: Date.now(),
-                submittedAt: new Date().toISOString()
+                storageTimestamp: new Date().toISOString()
             });
             localStorage.setItem('kud_form_submissions', JSON.stringify(submissions));
             
-            // Also store as lead data for analytics
+            // Store lead data for analytics
             const leads = JSON.parse(localStorage.getItem('kud_leads') || '[]');
             leads.push({
-                ...formData,
-                id: Date.now(),
+                submissionId: formData.metadata.submissionId,
+                name: formData.contactDetails.fullName,
+                email: formData.contactDetails.emailAddress,
+                phone: formData.contactDetails.phoneNumber,
+                program: formData.contactDetails.programInterest,
+                message: formData.contactDetails.message,
                 source: 'website_contact_form',
-                submittedAt: new Date().toISOString()
+                submittedAt: formData.metadata.timestamp,
+                referrer: formData.metadata.referrer,
+                userAgent: formData.metadata.userAgent
             });
             localStorage.setItem('kud_leads', JSON.stringify(leads));
             
-            console.log('Form data stored successfully:', formData);
+            // Store detailed contact details separately
+            const contactDetails = JSON.parse(localStorage.getItem('kud_contact_details') || '[]');
+            contactDetails.push({
+                id: formData.metadata.submissionId,
+                fullName: formData.contactDetails.fullName,
+                email: formData.contactDetails.emailAddress,
+                phone: formData.contactDetails.phoneNumber,
+                programSelected: formData.contactDetails.programInterest,
+                messageContent: formData.contactDetails.message,
+                submissionDate: formData.metadata.submissionDate,
+                submissionTime: formData.metadata.submissionTime,
+                interactionTime: formData.interactionData.timeSpentOnForm,
+                fieldsCompleted: formData.interactionData.fieldInteractionCount
+            });
+            localStorage.setItem('kud_contact_details', JSON.stringify(contactDetails));
+            
+            console.log('✅ Complete form data stored successfully');
+            console.log('📊 Submission ID:', formData.metadata.submissionId);
+            
         } catch (error) {
-            console.error('Error storing form data:', error);
+            console.error('❌ Error storing form data:', error);
         }
     }
 
@@ -668,16 +783,24 @@ class ContactFormHandler {
         if (feedback && feedbackContent) {
             feedback.className = 'contact__feedback success';
             feedbackContent.innerHTML = `
-                <strong>Thank you, ${formData.name}!</strong><br>
-                We've received your inquiry about our MBA program and will contact you within 24 hours at <strong>${formData.email}</strong>.
-                ${formData.program ? `<br><br>We'll provide detailed information about our <strong>${formData.program}</strong> specialization.` : ''}
+                <strong>Thank you, ${formData.contactDetails.fullName}!</strong><br>
+                <p>We've received your inquiry about our MBA program and will contact you within 24 hours.</p>
+                <div style="margin-top: 10px; padding: 10px; background: rgba(0,0,0,0.05); border-radius: 5px; font-size: 14px;">
+                    <strong>📋 Your Submission Details:</strong><br>
+                    <strong>Name:</strong> ${formData.contactDetails.fullName}<br>
+                    <strong>Email:</strong> ${formData.contactDetails.emailAddress}<br>
+                    ${formData.contactDetails.phoneNumber ? `<strong>Phone:</strong> ${formData.contactDetails.phoneNumber}<br>` : ''}
+                    <strong>Program Interest:</strong> ${formData.contactDetails.programInterest}<br>
+                    <strong>Message:</strong> ${formData.contactDetails.message.substring(0, 100)}${formData.contactDetails.message.length > 100 ? '...' : ''}<br>
+                    <strong>Submission ID:</strong> ${formData.metadata.submissionId}
+                </div>
             `;
             feedback.style.display = 'block';
             
-            // Auto-hide after 10 seconds
+            // Auto-hide after 15 seconds for detailed view
             setTimeout(() => {
                 if (feedback) feedback.style.display = 'none';
-            }, 10000);
+            }, 15000);
         }
     }
 
@@ -700,6 +823,7 @@ class ContactFormHandler {
     resetForm() {
         this.form.reset();
         this.formStartTracked = false;
+        this.formStartTime = null;
         
         // Clear all error states
         const errorFields = this.form.querySelectorAll('.error');
@@ -709,30 +833,55 @@ class ContactFormHandler {
         errorMessages.forEach(msg => msg.remove());
     }
 
-    // GA4 Tracking Methods
+    // GA4 Tracking Methods with Enhanced Data
     trackFormStart() {
+        this.formStartTime = Date.now();
+        
         if (this.ga4Tracker && typeof gtag !== 'undefined') {
             gtag('event', 'form_start', {
                 event_category: 'engagement',
                 event_label: 'contact_form_start',
+                form_name: 'mba_contact_form',
+                start_timestamp: new Date().toISOString()
+            });
+            console.log('📊 Form start tracked');
+        }
+    }
+
+    trackDropdownSelection(selectedProgram) {
+        if (this.ga4Tracker && typeof gtag !== 'undefined') {
+            gtag('event', 'program_dropdown_selection', {
+                event_category: 'engagement',
+                event_label: 'program_selection',
+                selected_program: selectedProgram,
                 form_name: 'mba_contact_form'
             });
-            console.log('Form start tracked');
+            console.log('📊 Program dropdown selection tracked:', selectedProgram);
         }
     }
 
     trackFormSubmission(formData) {
         if (this.ga4Tracker && typeof gtag !== 'undefined') {
-            // Main form submission event
+            // Main form submission event with all details
             gtag('event', 'form_submit', {
                 event_category: 'conversion',
                 event_label: 'contact_form_submission',
                 form_name: 'mba_contact_form',
-                user_name: formData.name,
-                user_email: formData.email,
-                user_phone: formData.phone || '',
-                program_interest: formData.program || 'not_specified',
-                message_length: formData.message ? formData.message.length : 0
+                submission_id: formData.metadata.submissionId,
+                // Contact details
+                user_name: formData.contactDetails.fullName,
+                user_email: formData.contactDetails.emailAddress,
+                user_phone: formData.contactDetails.phoneNumber || 'not_provided',
+                program_interest: formData.contactDetails.programInterest,
+                message_length: formData.contactDetails.message.length,
+                message_preview: formData.contactDetails.message.substring(0, 50),
+                // Interaction data
+                time_spent_on_form: formData.interactionData.timeSpentOnForm,
+                fields_completed: formData.interactionData.fieldInteractionCount,
+                // Metadata
+                referrer_source: formData.metadata.referrer,
+                submission_date: formData.metadata.submissionDate,
+                submission_time: formData.metadata.submissionTime
             });
 
             // Lead generation conversion event
@@ -742,15 +891,31 @@ class ContactFormHandler {
                 value: 1,
                 currency: 'USD',
                 lead_source: 'website_contact_form',
-                program_interest: formData.program || 'not_specified'
+                program_interest: formData.contactDetails.programInterest,
+                contact_quality: this.assessContactQuality(formData)
             });
 
-            console.log('Form submission tracked:', {
-                name: formData.name,
-                email: formData.email,
-                program: formData.program
+            console.log('📊 Complete form submission tracked:', {
+                submissionId: formData.metadata.submissionId,
+                name: formData.contactDetails.fullName,
+                email: formData.contactDetails.emailAddress,
+                program: formData.contactDetails.programInterest,
+                messageLength: formData.contactDetails.message.length
             });
         }
+    }
+
+    assessContactQuality(formData) {
+        let score = 0;
+        if (formData.contactDetails.fullName.length > 5) score += 1;
+        if (formData.contactDetails.phoneNumber) score += 1;
+        if (formData.contactDetails.programInterest !== 'Not specified') score += 1;
+        if (formData.contactDetails.message.length > 50) score += 1;
+        if (formData.interactionData.timeSpentOnForm > 30) score += 1;
+        
+        if (score >= 4) return 'high';
+        if (score >= 2) return 'medium';
+        return 'low';
     }
 
     trackFormError(errorMessage) {
@@ -759,9 +924,10 @@ class ContactFormHandler {
                 event_category: 'error',
                 event_label: 'contact_form_error',
                 error_message: errorMessage,
-                form_name: 'mba_contact_form'
+                form_name: 'mba_contact_form',
+                error_timestamp: new Date().toISOString()
             });
-            console.log('Form error tracked:', errorMessage);
+            console.log('📊 Form error tracked:', errorMessage);
         }
     }
 }
@@ -1521,15 +1687,79 @@ function debounce(func, wait) {
     };
 }
 
-// Debug function to view stored form data
+// Enhanced debug functions to view captured contact data
 function viewStoredFormData() {
     const submissions = JSON.parse(localStorage.getItem('kud_form_submissions') || '[]');
     const leads = JSON.parse(localStorage.getItem('kud_leads') || '[]');
+    const contactDetails = JSON.parse(localStorage.getItem('kud_contact_details') || '[]');
     
-    console.log('Form Submissions:', submissions);
-    console.log('Leads Data:', leads);
+    console.group('📊 STORED FORM DATA');
+    console.log('📝 Complete Submissions:', submissions);
+    console.log('🎯 Lead Data:', leads);
+    console.log('📞 Contact Details:', contactDetails);
+    console.groupEnd();
     
-    return { submissions, leads };
+    return { submissions, leads, contactDetails };
+}
+
+function viewContactDetails() {
+    const contactDetails = JSON.parse(localStorage.getItem('kud_contact_details') || '[]');
+    
+    console.group('📞 CONTACT DETAILS');
+    contactDetails.forEach((contact, index) => {
+        console.log(`📋 Contact ${index + 1}:`);
+        console.table({
+            'ID': contact.id,
+            'Name': contact.fullName,
+            'Email': contact.email,
+            'Phone': contact.phone,
+            'Program': contact.programSelected,
+            'Message': contact.messageContent.substring(0, 100) + '...',
+            'Date': contact.submissionDate,
+            'Time': contact.submissionTime
+        });
+    });
+    console.groupEnd();
+    
+    return contactDetails;
+}
+
+function exportContactData() {
+    const contactDetails = JSON.parse(localStorage.getItem('kud_contact_details') || '[]');
+    
+    if (contactDetails.length === 0) {
+        console.log('No contact data to export');
+        return;
+    }
+    
+    // Create CSV format
+    const headers = ['ID', 'Name', 'Email', 'Phone', 'Program', 'Message', 'Date', 'Time'];
+    const csvContent = [
+        headers.join(','),
+        ...contactDetails.map(contact => [
+            contact.id,
+            `"${contact.fullName}"`,
+            contact.email,
+            contact.phone || '',
+            `"${contact.programSelected}"`,
+            `"${contact.messageContent.replace(/"/g, '""')}"`,
+            contact.submissionDate,
+            contact.submissionTime
+        ].join(','))
+    ].join('\n');
+    
+    // Download as file
+    const blob = new Blob([csvContent], { type: 'text/csv' });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `kud_contact_data_${new Date().toISOString().split('T')[0]}.csv`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    window.URL.revokeObjectURL(url);
+    
+    console.log('✅ Contact data exported successfully');
 }
 
 // Handle window resize
@@ -1557,5 +1787,7 @@ window.previousQuestion = previousQuestion;
 window.trackProgramInterest = trackProgramInterest;
 window.selectAnswer = selectAnswer;
 window.viewStoredFormData = viewStoredFormData;
+window.viewContactDetails = viewContactDetails;
+window.exportContactData = exportContactData;
 
-console.log('MBA Website JavaScript with GA4 tracking and enhanced form handler loaded successfully');
+console.log('✅ MBA Website JavaScript with enhanced contact form handler loaded successfully');
