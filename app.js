@@ -379,7 +379,7 @@ class ContactFormHandler {
         
         // Mailtrap configuration
         this.mailtrapConfig = {
-            endpoint: 'https://send.api.mailtrap.io/api/send',
+            endpoint: 'https://bulk.api.mailtrap.io/api/send',
             apiToken: '8b6f78381906d0871d7d72a741be3efb', // Replace with your actual token
             fromEmail: 'noreply@kudmba.edu', // Your verified sender email
             fromName: 'KUD MBA Program',
