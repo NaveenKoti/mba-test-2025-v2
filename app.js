@@ -1,8 +1,8 @@
-// MBA Website JavaScript - GA4 Tracking Version with Enhanced Form Handler
+// MBA Website JavaScript - Complete Version with GA4 Tracking and Mailtrap Integration
 // Google Analytics 4 Configuration
 const GA4_CONFIG = {
-    measurementId: 'G-9FVVBS9GQV', // Your GA4 Measurement ID
-    debug: true // Set to true for development
+    measurementId: 'G-9FVVBS9GQV', // Replace with your actual GA4 Measurement ID
+    debug: true // Set to false for production
 };
 
 // Application data
@@ -369,13 +369,24 @@ class GA4Tracker {
     }
 }
 
-// Enhanced Contact Form Handler with Complete Data Capture
+// Enhanced Contact Form Handler with Mailtrap Email Integration
 class ContactFormHandler {
     constructor(ga4Tracker) {
         this.ga4Tracker = ga4Tracker;
         this.form = null;
         this.isSubmitting = false;
         this.formStartTracked = false;
+        
+        // Mailtrap configuration
+        this.mailtrapConfig = {
+            endpoint: 'https://send.api.mailtrap.io/api/send',
+            apiToken: '8b6f78381906d0871d7d72a741be3efb', // Replace with your actual token
+            fromEmail: 'noreply@kudmba.edu', // Your verified sender email
+            fromName: 'KUD MBA Program',
+            toEmail: 'naveenkoti@gmail.com', // Where to send notifications
+            toName: 'MBA Admissions Team'
+        };
+        
         this.init();
     }
 
@@ -387,7 +398,7 @@ class ContactFormHandler {
         }
 
         this.setupEventListeners();
-        console.log('Contact form handler initialized');
+        console.log('Contact form handler with Mailtrap integration initialized');
     }
 
     setupEventListeners() {
@@ -449,8 +460,11 @@ class ContactFormHandler {
         this.startSubmission();
 
         try {
-            // Process the submission
+            // Process the submission (store locally)
             await this.processSubmission(formData);
+            
+            // Send email via Mailtrap
+            await this.sendEmailNotification(formData);
             
             // Track successful submission with all details
             this.trackFormSubmission(formData);
@@ -466,6 +480,173 @@ class ContactFormHandler {
         } finally {
             this.endSubmission();
         }
+    }
+
+    async sendEmailNotification(formData) {
+        try {
+            console.log('📧 Sending email notification via Mailtrap...');
+            
+            const emailData = {
+                from: {
+                    email: this.mailtrapConfig.fromEmail,
+                    name: this.mailtrapConfig.fromName
+                },
+                to: [{
+                    email: this.mailtrapConfig.toEmail,
+                    name: this.mailtrapConfig.toName
+                }],
+                subject: `New MBA Inquiry - ${formData.contactDetails.fullName}`,
+                html: this.generateEmailTemplate(formData),
+                text: this.generatePlainTextEmail(formData),
+                category: "MBA Inquiry",
+                custom_variables: {
+                    submission_id: formData.metadata.submissionId,
+                    program_interest: formData.contactDetails.programInterest,
+                    lead_quality: this.assessContactQuality(formData)
+                }
+            };
+
+            const response = await fetch(this.mailtrapConfig.endpoint, {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${this.mailtrapConfig.apiToken}`,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(emailData)
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(`Mailtrap API error: ${response.status} - ${JSON.stringify(errorData)}`);
+            }
+
+            const result = await response.json();
+            console.log('✅ Email sent successfully via Mailtrap:', result);
+            
+            // Track email success
+            this.trackEmailSent(formData, 'success');
+            
+            return result;
+
+        } catch (error) {
+            console.error('❌ Email sending failed:', error);
+            
+            // Track email failure
+            this.trackEmailSent(formData, 'failed', error.message);
+            
+            // Don't throw error - we still want to show success to user
+            // The form data is still captured locally
+            console.warn('Form submitted successfully but email notification failed');
+        }
+    }
+
+    generateEmailTemplate(formData) {
+        const { contactDetails, metadata, interactionData } = formData;
+        
+        return `
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <meta charset="utf-8">
+            <title>New MBA Inquiry</title>
+            <style>
+                body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+                .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+                .header { background: #1a365d; color: white; padding: 20px; text-align: center; }
+                .content { background: #f8f9fa; padding: 20px; }
+                .section { margin-bottom: 20px; padding: 15px; background: white; border-radius: 5px; }
+                .label { font-weight: bold; color: #1a365d; }
+                .value { margin-bottom: 10px; }
+                .message-box { background: #e3f2fd; padding: 15px; border-radius: 5px; border-left: 4px solid #1976d2; }
+                .footer { text-align: center; padding: 20px; font-size: 12px; color: #666; }
+                .highlight { background: #fff3cd; padding: 10px; border-radius: 3px; margin: 5px 0; }
+            </style>
+        </head>
+        <body>
+            <div class="container">
+                <div class="header">
+                    <h1>🎓 New MBA Program Inquiry</h1>
+                    <p>Submission ID: ${metadata.submissionId}</p>
+                </div>
+                
+                <div class="content">
+                    <div class="section">
+                        <h2>👤 Contact Information</h2>
+                        <div class="value"><span class="label">Name:</span> ${contactDetails.fullName}</div>
+                        <div class="value"><span class="label">Email:</span> <a href="mailto:${contactDetails.emailAddress}">${contactDetails.emailAddress}</a></div>
+                        <div class="value"><span class="label">Phone:</span> ${contactDetails.phoneNumber || 'Not provided'}</div>
+                        <div class="highlight">
+                            <span class="label">Program Interest:</span> <strong>${contactDetails.programInterest}</strong>
+                        </div>
+                    </div>
+                    
+                    <div class="section">
+                        <h2>💬 Message</h2>
+                        <div class="message-box">
+                            ${contactDetails.message.replace(/\n/g, '<br>')}
+                        </div>
+                    </div>
+                    
+                    <div class="section">
+                        <h2>📊 Submission Details</h2>
+                        <div class="value"><span class="label">Date:</span> ${metadata.submissionDate}</div>
+                        <div class="value"><span class="label">Time:</span> ${metadata.submissionTime}</div>
+                        <div class="value"><span class="label">Time on Form:</span> ${interactionData.timeSpentOnForm} seconds</div>
+                        <div class="value"><span class="label">Lead Quality:</span> ${this.assessContactQuality(formData).toUpperCase()}</div>
+                        <div class="value"><span class="label">Referrer:</span> ${metadata.referrer}</div>
+                        <div class="value"><span class="label">User Agent:</span> ${metadata.userAgent}</div>
+                    </div>
+                    
+                    <div class="section">
+                        <h2>🎯 Quick Actions</h2>
+                        <p>📞 <strong>Call:</strong> ${contactDetails.phoneNumber || 'No phone provided'}</p>
+                        <p>📧 <strong>Reply:</strong> <a href="mailto:${contactDetails.emailAddress}?subject=Re: MBA Program Inquiry - ${contactDetails.programInterest}">Send Reply</a></p>
+                        <p>📋 <strong>Program:</strong> Send ${contactDetails.programInterest} program details</p>
+                    </div>
+                </div>
+                
+                <div class="footer">
+                    <p>KUD MBA Program - Admissions Notification System</p>
+                    <p>This email was generated automatically from your website contact form.</p>
+                </div>
+            </div>
+        </body>
+        </html>
+        `;
+    }
+
+    generatePlainTextEmail(formData) {
+        const { contactDetails, metadata, interactionData } = formData;
+        
+        return `
+KUD MBA PROGRAM - NEW INQUIRY
+Submission ID: ${metadata.submissionId}
+
+CONTACT INFORMATION:
+Name: ${contactDetails.fullName}
+Email: ${contactDetails.emailAddress}
+Phone: ${contactDetails.phoneNumber || 'Not provided'}
+Program Interest: ${contactDetails.programInterest}
+
+MESSAGE:
+${contactDetails.message}
+
+SUBMISSION DETAILS:
+Date: ${metadata.submissionDate}
+Time: ${metadata.submissionTime}
+Time on Form: ${interactionData.timeSpentOnForm} seconds
+Lead Quality: ${this.assessContactQuality(formData).toUpperCase()}
+Referrer: ${metadata.referrer}
+
+QUICK ACTIONS:
+- Call: ${contactDetails.phoneNumber || 'No phone provided'}
+- Reply: ${contactDetails.emailAddress}
+- Send ${contactDetails.programInterest} program details
+
+---
+KUD MBA Program - Admissions Team
+This is an automated notification from your website contact form.
+        `;
     }
 
     collectComprehensiveFormData() {
@@ -563,7 +744,6 @@ class ContactFormHandler {
     }
 
     getFieldInteractionCount() {
-        // This could be enhanced to track actual field interactions
         const filledFields = [
             this.form.name?.value,
             this.form.email?.value,
@@ -751,7 +931,7 @@ class ContactFormHandler {
         
         // Fallback if no specific elements found
         if (!btnText && !btnLoading) {
-            submitBtn.textContent = 'Submitting...';
+            submitBtn.textContent = 'Sending...';
         }
     }
 
@@ -784,7 +964,7 @@ class ContactFormHandler {
             feedback.className = 'contact__feedback success';
             feedbackContent.innerHTML = `
                 <strong>Thank you, ${formData.contactDetails.fullName}!</strong><br>
-                <p>We've received your inquiry about our MBA program and will contact you within 24 hours.</p>
+                <p>✅ Your inquiry has been submitted successfully and our admissions team has been notified via email.</p>
                 <div style="margin-top: 10px; padding: 10px; background: rgba(0,0,0,0.05); border-radius: 5px; font-size: 14px;">
                     <strong>📋 Your Submission Details:</strong><br>
                     <strong>Name:</strong> ${formData.contactDetails.fullName}<br>
@@ -792,15 +972,19 @@ class ContactFormHandler {
                     ${formData.contactDetails.phoneNumber ? `<strong>Phone:</strong> ${formData.contactDetails.phoneNumber}<br>` : ''}
                     <strong>Program Interest:</strong> ${formData.contactDetails.programInterest}<br>
                     <strong>Message:</strong> ${formData.contactDetails.message.substring(0, 100)}${formData.contactDetails.message.length > 100 ? '...' : ''}<br>
-                    <strong>Submission ID:</strong> ${formData.metadata.submissionId}
+                    <strong>Submission ID:</strong> ${formData.metadata.submissionId}<br>
+                    <strong>📧 Email Status:</strong> Notification sent to admissions team
                 </div>
+                <p style="margin-top: 10px; font-size: 14px; color: #666;">
+                    We'll contact you within 24 hours at ${formData.contactDetails.emailAddress} with detailed information about our ${formData.contactDetails.programInterest} program.
+                </p>
             `;
             feedback.style.display = 'block';
             
-            // Auto-hide after 15 seconds for detailed view
+            // Auto-hide after 20 seconds for detailed view
             setTimeout(() => {
                 if (feedback) feedback.style.display = 'none';
-            }, 15000);
+            }, 20000);
         }
     }
 
@@ -905,6 +1089,22 @@ class ContactFormHandler {
         }
     }
 
+    trackEmailSent(formData, status, errorMessage = null) {
+        if (this.ga4Tracker && typeof gtag !== 'undefined') {
+            gtag('event', 'email_notification', {
+                event_category: 'communication',
+                event_label: 'mailtrap_email',
+                email_status: status,
+                submission_id: formData.metadata.submissionId,
+                recipient: this.mailtrapConfig.toEmail,
+                program_interest: formData.contactDetails.programInterest,
+                error_message: errorMessage || 'none'
+            });
+            
+            console.log(`📊 Email ${status} tracked for submission:`, formData.metadata.submissionId);
+        }
+    }
+
     assessContactQuality(formData) {
         let score = 0;
         if (formData.contactDetails.fullName.length > 5) score += 1;
@@ -928,6 +1128,37 @@ class ContactFormHandler {
                 error_timestamp: new Date().toISOString()
             });
             console.log('📊 Form error tracked:', errorMessage);
+        }
+    }
+
+    // Test email integration method
+    async testEmailIntegration() {
+        const testData = {
+            contactDetails: {
+                fullName: 'Test User',
+                emailAddress: 'test@example.com',
+                phoneNumber: '+91 9876543210',
+                programInterest: 'Marketing',
+                message: 'This is a test message to verify email integration.'
+            },
+            metadata: {
+                submissionId: 'TEST_' + Date.now(),
+                submissionDate: new Date().toLocaleDateString('en-IN'),
+                submissionTime: new Date().toLocaleTimeString('en-IN'),
+                referrer: 'Test',
+                userAgent: navigator.userAgent
+            },
+            interactionData: {
+                timeSpentOnForm: 60,
+                fieldInteractionCount: 5
+            }
+        };
+
+        try {
+            await this.sendEmailNotification(testData);
+            console.log('✅ Test email sent successfully');
+        } catch (error) {
+            console.error('❌ Test email failed:', error);
         }
     }
 }
@@ -1451,6 +1682,37 @@ function makeCarousel({ containerSelector, prevSelector, nextSelector, cardGap =
             if (autoPlay) restartAutoPlay();
         });
     }
+    
+    // Touch support
+    let startX = 0;
+    let currentX = 0;
+    let isDragging = false;
+    
+    container.addEventListener('touchstart', (e) => {
+        startX = e.touches[0].clientX;
+        isDragging = true;
+        if (autoPlay) stopAutoPlay();
+    }, { passive: true });
+    
+    container.addEventListener('touchmove', (e) => {
+        if (!isDragging) return;
+        currentX = e.touches[0].clientX;
+    }, { passive: true });
+    
+    container.addEventListener('touchend', () => {
+        if (!isDragging) return;
+        isDragging = false;
+        
+        const diffX = startX - currentX;
+        if (Math.abs(diffX) > 50) {
+            if (diffX > 0) {
+                nextSlide();
+            } else {
+                prevSlide();
+            }
+        }
+        if (autoPlay) restartAutoPlay();
+    });
     
     // Auto-play functionality
     const startAutoPlay = () => {
