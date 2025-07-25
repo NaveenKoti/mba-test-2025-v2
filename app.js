@@ -379,8 +379,8 @@ class ContactFormHandler {
         
         // Mailtrap configuration
         this.mailtrapConfig = {
-            endpoint: 'https://bulk.api.mailtrap.io/api/send',
-            apiToken: '8b6f78381906d0871d7d72a741be3efb', // Replace with your actual token
+            endpoint: 'https://send.api.mailtrap.io/api/send',
+            apiToken: '3d30b068f6e2a51a3be5308d223f0be2', // Replace with your actual token
             fromEmail: 'noreply@kudmba.edu', // Your verified sender email
             fromName: 'KUD MBA Program',
             toEmail: 'naveenkoti@gmail.com', // Where to send notifications
